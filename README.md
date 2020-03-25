@@ -2,27 +2,34 @@
 The Android version of the Snake Messenger application
 
 **1. INTRODUCERE**
+
 **1.1. Scopul documentului**
 Acest document își propune să descrie într-un mod transparent și ușor de urmărit structura generală a unei aplicații de chat, un sistem (produs) software modelat după specificațiile comerciale (cerințele părților interesate).
 Acesta are rolul de a expune cerințele funcționale ale aplicației care va fi dezvoltată, incluzând prezentarea unui set de cazuri de utilizare care descriu interacțiunea dintre utilizatori și software.
+
 
 **1.2. Domeniul/contextul de utilizare al sistemului**
 Software-ul prezentat face parte din categoria de aplicații de comunicare ce facilitează interacțiunea între persoane din mediul online.
 
 
+
 **2. DESCRIERE GENERALĂ**
+
 **2.1. Scurtă descriere a sistemului**
 Snake Messenger este o aplicație de chat proiectată cu scopul de a ușura interacțiunea dintre utilizatorii din mediul online. Aceasta oferă o comunicație în timp real între clienți, oferind suport multimedia pentru mesaje. De asemenea, aplicația va fi disponibilă atât pe dispozitive mobile care rulează Android, cât și sub forma unei aplicații Web, ambele platforme dispunând de aceleași funcționalități.
+
 
 **2.2. Motivație**
 	Într-un secol al tehnologizării, tot mai multe procese tind să fie digitalizate sau parțial automatizate prin intermediul ingineriei software.
 	Sistemul propus anterior este conceput pentru a răspunde nevoilor utilizatorilor care doresc sa folosească Internetul ca mijloc de comunicare.
+
 
 **2.3. Produse similare**
 	Piața de desfacere pentru această categorie de produse software este în plină dezvoltare, bucurându-se de o cerere mare, oferind posibilitatea de inovație. Printre cele mai utilizate aplicații de tip messaging, enumerăm: Slack, Facebook Messenger, WhatsApp.
 	Slack este un sistem ce se mulează foarte bine pe latura de business, oferind un spațiu de lucru prin integrarea cu servicii de dezvoltare software, spre exemplu automatizarea deployment-urilor.
 	WhatsApp și Facebook Messenger au un public țintă mai larg, axându-se pe
 interconectarea persoanele din locații geografice diferite, fără costurile aferente convorbirilor internaționale.
+
 
 **2.4. Riscurile proiectului**
 	La nivel de competiție, Snake Messenger se confruntă cu titanii comunicației de tip Instant Messaging, precum Facebook Messenger și WhatsApp Messenger. De asemenea, o altă competiție o reprezintă alte aplicații ale căror funcționalități includ schimbul de mesaje, precum Snapchat sau Slack.
@@ -34,7 +41,9 @@ Nu există o certitudine că aplicația va oferi o performanță optimă.
 	La nivelul factorilor externi, există un impediment destul de mare: preferințele și tendințele actuale în materie de funcționalități, având un impact asupra satisfacției utilizatorului.
 
 
+
 **3. SISTEMUL PROPUS**
+
 **3.1. Categorii de utilizatori ai sistemului**
 	Sistemul are țintă un public larg, adresându-se utilizatorilor indiferent de zona geografică și categoria socială. 
 	Aplicația funcționează ca un canal bidirecțional de comunicare, permițând schimbul de mesaje între clienți în timp real. Pentru a utiliza sistemul, un utilizator nou va avea posibilitatea de a-și crea un cont, primind un mail de confirmare al acestuia. Apoi, se va putea autentifica folosind datele introduse anterior (adresă de e-mail și parolă). De îndată ce autentificarea s-a realizat cu succes, utilizatorul va putea căuta alte persoane care folosesc aplicația și să le trimită o cerere de prietenie. În cazul în care cererea de prietenie este acceptată, cei doi utilizatori se vor vedea reciproc în ferestrele de chat asociate fiecăruia. Mai departe, fiecare utilizator are posibilitatea de a accesa din fereastra de navigare un anumit prieten cu care dorește să comunice, sistemul deschizând o nouă fereastră de dialog între cei doi utilizatori. În cadrul acestei ferestre, fiecare dintre cei doi utilizatori are posibilitatea de a scrie mesaje, acestea fiind preluate de aplicație și trimise atât destinatarului, cât și expeditorului, pe baza identificatorului ferestrei de dialog deschise.
@@ -88,6 +97,7 @@ grup, acesta face difuzarea mesajelor, membrii grupului fiind notificati de mesa
 
 **Ștergere cont**
 Utilizatorii ce doresc să își înceteze activitatea în cadrul aplicației își pot șterge contul prin accesarea unui link primit pe mail și introducerea parolei asociate contului.
+
 
 
 **3.4. Cerințe nefuncționale**
