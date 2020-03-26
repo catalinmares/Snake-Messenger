@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "933434381280",
+    "firebase_url": "https://snake-messenger.firebaseio.com",
+    "project_id": "snake-messenger",
+    "storage_bucket": "snake-messenger.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:933434381280:android:44826fbed3254162855185",
+        "android_client_info": {
+          "package_name": "com.example.snakemessenger"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "933434381280-aec1sfg9tv9btktkthimmpvilhdcp533.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.snakemessenger",
+            "certificate_hash": "2a37efb0169e100352b512224a798cd537572a80"
+          }
+        },
+        {
+          "client_id": "933434381280-idva2vkaougvnbd8n8tsgk66g9h1kavd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-MBGrk3zQ5q2V7jbB6V7pfLJEfNrl8wg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "933434381280-idva2vkaougvnbd8n8tsgk66g9h1kavd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
