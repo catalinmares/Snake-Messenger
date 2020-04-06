@@ -1,9 +1,12 @@
 package com.example.snakemessenger;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -28,6 +31,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -41,14 +46,18 @@ import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     public static final String TAG = "SnakeMessenger";
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
+    private FirebaseStorage storage;
+    private StorageReference storageReference;
 
     ImageView picture;
+    TextView welcomeMessage;
     TextView name, email;
 
     @Override
@@ -77,6 +86,11 @@ public class MainActivity extends AppCompatActivity
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
+        storage = FirebaseStorage.getInstance();
+        storageReference = storage.getReference();
+
+        welcomeMessage = findViewById(R.id.welcome);
+        welcomeMessage.setText(String.format("Hello, %s!", Objects.requireNonNull(mAuth.getCurrentUser()).getDisplayName()));
     }
 
     @Override
@@ -84,6 +98,7 @@ public class MainActivity extends AppCompatActivity
         super.onStart();
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
+        assert currentUser != null;
         updateUI(currentUser);
     }
 
@@ -150,9 +165,10 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public void updateUI(FirebaseUser user) {
+    public void updateUI(final FirebaseUser user) {
         Map<String, Object> userData = new HashMap<String, Object>();
         userData.put("email", user.getEmail());
+
         db.collection("users")
                 .document(user.getUid())
                 .update(userData)
@@ -173,11 +189,34 @@ public class MainActivity extends AppCompatActivity
                             Log.d(MainActivity.TAG, "DocumentSnapshot data: " + documentSnapshot.getData());
 
                             String userName = documentSnapshot.getString("name");
+                            String profilePic = documentSnapshot.getString("picture");
                             String userEmail = documentSnapshot.getString("email");
 
                             name = findViewById(R.id.user_name);
                             email = findViewById(R.id.user_email);
                             picture = findViewById(R.id.user_picture);
+
+                            assert profilePic != null;
+                            if (profilePic.equals("yes")) {
+                                final long ONE_MEGABYTE = 1024 * 1024;
+
+                                storageReference.child(user.getUid() + "-profile_pic")
+                                        .getBytes(ONE_MEGABYTE)
+                                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                                            @Override
+                                            public void onSuccess(byte[] bytes) {
+                                                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                                picture.setImageBitmap(bitmap);
+                                            }
+                                        })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Toast.makeText(MainActivity.this, "Failed to load profile picture.",
+                                                        Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                            }
 
                             name.setText(userName);
                             email.setText(userEmail);
