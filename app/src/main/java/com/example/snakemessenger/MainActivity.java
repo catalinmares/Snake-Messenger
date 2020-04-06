@@ -39,6 +39,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
@@ -150,6 +151,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void updateUI(FirebaseUser user) {
+        Map<String, Object> userData = new HashMap<String, Object>();
+        userData.put("email", user.getEmail());
+        db.collection("users")
+                .document(user.getUid())
+                .update(userData)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(MainActivity.TAG, "Successfully update e-mail in database.");
+                    }
+                });
+
         db.collection("users")
                 .document(user.getUid())
                 .get()

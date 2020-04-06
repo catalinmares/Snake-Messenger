@@ -31,7 +31,7 @@ public class SignUpActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     Button signUp;
-    EditText name, email, password;
+    EditText name, email, password, confirm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +45,7 @@ public class SignUpActivity extends AppCompatActivity {
         name = findViewById(R.id.name);
         email = findViewById(R.id.email2);
         password = findViewById(R.id.password2);
+        confirm = findViewById(R.id.password_confirm);
 
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -52,13 +53,17 @@ public class SignUpActivity extends AppCompatActivity {
                 String userName = name.getText().toString();
                 String userEmail = email.getText().toString();
                 String userPassword = password.getText().toString();
+                String confirmPassword = confirm.getText().toString();
 
-                if (TextUtils.isEmpty(userName) || TextUtils.isEmpty(userEmail) || TextUtils.isEmpty(userPassword)) {
+                if (TextUtils.isEmpty(userName) || TextUtils.isEmpty(userEmail) ||
+                        TextUtils.isEmpty(userPassword) || TextUtils.isEmpty(confirmPassword)) {
                     Toast.makeText(SignUpActivity.this, "All fields are required", Toast.LENGTH_SHORT).show();
                 } else if (userPassword.length() < 6) {
                     Toast.makeText(SignUpActivity.this, "Password must contain at least 6 characters", Toast.LENGTH_SHORT).show();
                 } else if (!userEmail.matches("[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+")) {
                     Toast.makeText(SignUpActivity.this, "Please provide a valid e-mail address.", Toast.LENGTH_SHORT).show();
+                } else if (!userPassword.equals(confirmPassword)) {
+                    Toast.makeText(SignUpActivity.this, "The two passwords do not match.", Toast.LENGTH_SHORT).show();
                 } else {
                     createAccount(userName, userEmail, userPassword);
                 }
@@ -99,7 +104,6 @@ public class SignUpActivity extends AppCompatActivity {
                             userData.put("name", name);
                             userData.put("picture", "default");
                             userData.put("email", email);
-                            userData.put("password", password);
                             userData.put("status", "default");
 
                             docRef.set(userData)
@@ -126,7 +130,7 @@ public class SignUpActivity extends AppCompatActivity {
                         } else {
                             Toast.makeText(SignUpActivity.this, "Sign Up failed.",
                                     Toast.LENGTH_SHORT).show();
-                            Log.d(MainActivity.TAG, "ERROR during SIGNUP: " + task.getException().toString());
+                            Log.d(MainActivity.TAG, "ERROR during SIGNUP: " + task.getException());
                         }
                     }
                 });

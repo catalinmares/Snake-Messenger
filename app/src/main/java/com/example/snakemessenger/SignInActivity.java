@@ -5,10 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -21,6 +23,10 @@ public class SignInActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     Button signIn, signUp;
     EditText email, password;
+    TextView reset;
+    TextView resetText, resetTimer;
+    private int retryTime;
+    private boolean retryVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +47,13 @@ public class SignInActivity extends AppCompatActivity {
 
         email = findViewById(R.id.email);
         password = findViewById(R.id.password);
+
+        reset = findViewById(R.id.password_reset2);
+        resetText = findViewById(R.id.reset_text);
+        resetTimer = findViewById(R.id.reset_timer);
+
+        resetText.setVisibility(View.GONE);
+        resetTimer.setVisibility(View.GONE);
 
         signIn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,6 +76,63 @@ public class SignInActivity extends AppCompatActivity {
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
+            }
+        });
+
+        reset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String userEmail = email.getText().toString();
+
+                if (resetTimer.getVisibility() == View.VISIBLE && !resetTimer.getText().toString().equals("00:00")) {
+                    Toast.makeText(SignInActivity.this, "Please wait until timer reaches 0 " +
+                            "before resending the request.", Toast.LENGTH_LONG).show();
+                } else if (TextUtils.isEmpty(userEmail)) {
+                    Toast.makeText(SignInActivity.this, "In order to reset your password, " +
+                            "you need to complete the e-mail field above", Toast.LENGTH_LONG).show();
+                } else if (!userEmail.matches("[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+")) {
+                    Toast.makeText(SignInActivity.this, "In order to reset you password, " +
+                            "you need to provide a valid e-mail address in the field above.", Toast.LENGTH_LONG).show();
+                } else {
+                    mAuth.sendPasswordResetEmail(userEmail)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Toast.makeText(SignInActivity.this, "A reset password e-mail " +
+                                                "has been sent to the provided address", Toast.LENGTH_LONG).show();
+                                    } else {
+                                        Toast.makeText(SignInActivity.this, "There was an error sending the reset request. " +
+                                                "Please check your Internet connection or the correctness of the provided e-mail address.", Toast.LENGTH_LONG).show();
+                                    }
+
+                                    retryTime = 120;
+                                    resetText.setVisibility(View.VISIBLE);
+                                    resetTimer.setVisibility(View.VISIBLE);
+
+                                    new CountDownTimer(120000, 1000) {
+
+                                        public void onTick(long millisUntilFinished) {
+                                            if (retryTime == 120) {
+                                                resetTimer.setText("02:" + checkDigit(retryTime - 120));
+                                            } else if (retryTime >= 60) {
+                                                resetTimer.setText("01:" + checkDigit(retryTime - 60));
+                                            } else {
+                                                resetTimer.setText("00:" + checkDigit(retryTime));
+                                            }
+
+                                            retryTime--;
+                                        }
+
+                                        public void onFinish() {
+                                            resetText.setVisibility(View.GONE);
+                                            resetTimer.setVisibility(View.GONE);
+                                        }
+
+                                    }.start();
+                                }
+                            });
+                }
             }
         });
     }
@@ -89,5 +159,9 @@ public class SignInActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    public String checkDigit(int number) {
+        return number <= 9 ? "0" + number : String.valueOf(number);
     }
 }
