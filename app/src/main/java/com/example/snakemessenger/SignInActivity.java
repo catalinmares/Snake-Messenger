@@ -37,13 +37,6 @@ public class SignInActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().isEmailVerified()) {
-            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            finish();
-        }
-
         signIn = findViewById(R.id.signin_button);
         signUp = findViewById(R.id.signup_button);
 
@@ -75,9 +68,7 @@ public class SignInActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(SignInActivity.this, SignUpActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
-                finish();
             }
         });
 
@@ -139,6 +130,13 @@ public class SignInActivity extends AppCompatActivity {
         });
     }
 
+    private void sendUserToMainActivity() {
+        Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
+    }
+
     public void signIn(String email, String password) {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -149,10 +147,7 @@ public class SignInActivity extends AppCompatActivity {
                             assert user != null;
 
                             if (user.isEmailVerified()) {
-                                Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                startActivity(intent);
-                                finish();
+                                sendUserToMainActivity();
                             } else {
                                 Toast.makeText(SignInActivity.this, "You need to confirm your e-mail address first.", Toast.LENGTH_SHORT).show();
                             }

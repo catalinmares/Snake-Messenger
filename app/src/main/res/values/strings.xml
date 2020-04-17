@@ -13,4 +13,10 @@
     <string name="menu_logout">Log Out</string>
     <string name="menu_share">Share</string>
     <string name="menu_send">Send</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="chats_fragment">Chats Fragment</string>
+    <string name="groups_fragment">Groups Fragment</string>
+    <string name="contacts_fragment">Contacts Fragment</string>
 </resources>

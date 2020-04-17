@@ -6,6 +6,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -20,6 +21,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -53,6 +55,7 @@ public class SignUpActivity extends AppCompatActivity {
     private Button takePicture, pickPicture, signUp;
     private EditText name, email, password, confirm;
     private ImageView profilePic;
+    private ProgressDialog mProgressDialog;
     private boolean customProfilePic = false;
 
     @Override
@@ -73,6 +76,8 @@ public class SignUpActivity extends AppCompatActivity {
         email = findViewById(R.id.email2);
         password = findViewById(R.id.password2);
         confirm = findViewById(R.id.password_confirm);
+
+        mProgressDialog = new ProgressDialog(this);
 
         takePicture.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -117,9 +122,29 @@ public class SignUpActivity extends AppCompatActivity {
                 String userEmail = email.getText().toString();
                 String userPassword = password.getText().toString();
                 String confirmPassword = confirm.getText().toString();
+                boolean fieldsCompleted = true;
 
-                if (TextUtils.isEmpty(userName) || TextUtils.isEmpty(userEmail) ||
-                        TextUtils.isEmpty(userPassword) || TextUtils.isEmpty(confirmPassword)) {
+                if (TextUtils.isEmpty(userName)) {
+                    name.setError("Name is required!");
+                    fieldsCompleted = false;
+                }
+
+                if (TextUtils.isEmpty(userEmail)) {
+                    email.setError("Email is required!");
+                    fieldsCompleted = false;
+                }
+
+                if (TextUtils.isEmpty(userPassword)) {
+                    password.setError("Password is required!");
+                    fieldsCompleted = false;
+                }
+
+                if (TextUtils.isEmpty(confirmPassword)) {
+                    confirm.setError("Password confirmation is required!");
+                    fieldsCompleted = false;
+                }
+
+                if (!fieldsCompleted) {
                     Toast.makeText(SignUpActivity.this, "All fields are required", Toast.LENGTH_SHORT).show();
                 } else if (userPassword.length() < 6) {
                     Toast.makeText(SignUpActivity.this, "Password must contain at least 6 characters", Toast.LENGTH_SHORT).show();
@@ -135,11 +160,18 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void createAccount(final String name, final String email, final String password) {
+        mProgressDialog.setTitle("Creating new account");
+        mProgressDialog.setMessage("Please wait while we create your new account.");
+        mProgressDialog.setCanceledOnTouchOutside(true);
+        mProgressDialog.show();
+
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
+                            mProgressDialog.dismiss();
+
                             FirebaseUser user = mAuth.getCurrentUser();
                             assert user != null;
 
@@ -228,9 +260,10 @@ public class SignUpActivity extends AppCompatActivity {
                                         }
                                     });
                         } else {
+                            mProgressDialog.dismiss();
+
                             Toast.makeText(SignUpActivity.this, "Sign Up failed.",
                                     Toast.LENGTH_SHORT).show();
-                            Log.d(MainActivity.TAG, "ERROR during SIGNUP: " + task.getException());
                         }
                     }
                 });
