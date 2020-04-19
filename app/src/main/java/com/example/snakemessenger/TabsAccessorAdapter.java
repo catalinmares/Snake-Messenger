@@ -6,6 +6,10 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
+import com.example.snakemessenger.chats.ChatsFragment;
+import com.example.snakemessenger.friends.FriendsFragment;
+import com.example.snakemessenger.groups.GroupsFragment;
+
 public class TabsAccessorAdapter extends FragmentPagerAdapter {
     public TabsAccessorAdapter(@NonNull FragmentManager fm) {
         super(fm);
@@ -19,7 +23,7 @@ public class TabsAccessorAdapter extends FragmentPagerAdapter {
             case 1:
                 return new GroupsFragment();
             case 2:
-                return new ContactsFragment();
+                return new FriendsFragment();
             default:
                 return null;
         }
@@ -39,7 +43,7 @@ public class TabsAccessorAdapter extends FragmentPagerAdapter {
             case 1:
                 return "Groups";
             case 2:
-                return "Contacts";
+                return "Friends";
             default:
                 return null;
         }
