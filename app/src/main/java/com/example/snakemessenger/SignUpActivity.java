@@ -40,6 +40,7 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -210,6 +211,7 @@ public class SignUpActivity extends AppCompatActivity {
                             final DocumentReference docRef = db.collection("users").document(userID);
 
                             Map<String, Object> userData = new HashMap<String, Object>();
+                            userData.put("userID", userID);
                             userData.put("name", name);
 
                             if (customProfilePic) {
@@ -236,7 +238,8 @@ public class SignUpActivity extends AppCompatActivity {
                             }
 
                             userData.put("email", email);
-                            userData.put("status", "default");
+                            userData.put("status", "Available");
+                            userData.put("friends", new ArrayList<String>());
 
                             docRef.set(userData)
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {

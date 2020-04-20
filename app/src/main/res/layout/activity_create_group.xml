@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".CreateGroupActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <include
+            android:id="@+id/create_group_toolbar"
+            layout="@layout/app_bar_layout">
+        </include>
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:layout_below="@id/create_group_toolbar"
+            android:id="@+id/create_group_image"
+            android:layout_width="150dp"
+            android:layout_marginTop="50dp"
+            android:layout_height="150dp"
+            android:layout_centerHorizontal="true"
+            app:civ_border_width="5dp"
+            app:civ_border_color="@color/colorAccent"
+            android:src="@drawable/group_image"/>
+
+        <TextView
+            android:id="@+id/create_group_name_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/create_group_image"
+            android:layout_marginTop="20dp"
+            android:text="Group name"
+            android:textColor="@color/colorAccent"
+            android:textSize="22sp"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/create_group_name_edit"
+            android:layout_width="match_parent"
+            android:layout_marginStart="50dp"
+            android:layout_marginEnd="50dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/create_group_name_text"
+            android:hint="Enter group name"
+            android:textSize="22sp"/>
+
+        <TextView
+            android:id="@+id/create_group_description_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/create_group_name_edit"
+            android:layout_marginTop="20dp"
+            android:text="Group description"
+            android:textColor="@color/colorAccent"
+            android:textSize="22sp"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/create_group_description_edit"
+            android:layout_width="match_parent"
+            android:layout_marginStart="50dp"
+            android:layout_marginEnd="50dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/create_group_description_text"
+            android:hint="Description (optional)"
+            android:textSize="22sp"/>
+
+        <TextView
+            android:id="@+id/create_group_members_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/create_group_description_edit"
+            android:layout_marginTop="20dp"
+            android:text="Members"
+            android:textColor="@color/colorAccent"
+            android:textSize="22sp"
+            android:textStyle="bold"/>
+
+        <Button
+            android:id="@+id/create_group_add_friend_btn"
+            android:layout_width="125dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/create_group_members_text"
+            android:layout_marginTop="10dp"
+            android:text="Add member"
+            android:textColor="#FFFFFF"
+            android:background="@color/colorAccent"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/create_group_members_recycler_view"
+            android:layout_width="wrap_content"
+            android:layout_height="150dp"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/create_group_add_friend_btn"
+            android:layout_marginTop="30dp"/>
+
+        <Button
+            android:id="@+id/create_group_submit_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginStart="50dp"
+            android:layout_marginEnd="50dp"
+            android:layout_marginBottom="50dp"
+            android:layout_below="@id/create_group_members_recycler_view"
+            android:layout_marginTop="50dp"
+            android:text="Create"
+            android:textColor="#FFFFFF"
+            android:background="@color/colorAccent"/>
+    </RelativeLayout>
+</ScrollView>

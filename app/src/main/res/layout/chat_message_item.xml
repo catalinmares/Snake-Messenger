@@ -9,7 +9,8 @@
         android:id="@+id/sender_profile_pic"
         android:layout_width="56dp"
         android:layout_height="56dp"
-        android:layout_centerVertical="true"
+        android:layout_marginTop="5dp"
+        android:layout_marginStart="10dp"
         android:src="@drawable/profile_image"/>
 
     <TextView
@@ -19,6 +20,7 @@
         android:layout_toEndOf="@id/sender_profile_pic"
         android:layout_marginTop="10dp"
         android:layout_marginStart="10dp"
+        android:layout_marginEnd="15dp"
         android:text="Contact Name"
         android:textStyle="bold"
         android:textSize="17sp"
@@ -31,6 +33,7 @@
         android:layout_toEndOf="@+id/sender_profile_pic"
         android:layout_marginStart="10dp"
         android:layout_marginTop="5dp"
+        android:layout_marginEnd="15dp"
         android:layout_below="@id/sender_name"
         android:text="Message content"
         android:textSize="15sp"/>
@@ -40,7 +43,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
-        android:layout_marginEnd="5dp"
+        android:layout_marginEnd="15dp"
         android:layout_below="@+id/message_content"
         android:layout_marginTop="5dp"
         android:text="Timestamp"

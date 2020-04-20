@@ -1,6 +1,7 @@
 package com.example.snakemessenger;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -17,31 +18,35 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class GroupChatActivity extends AppCompatActivity {
     private String groupName;
     private String adminID;
-    private String currentUserID, currentUserName, currentUserPic;
-    private Bitmap currentUserProfilePicture;
+    private String currentUserID;
+    private String groupDescription;
+    private String groupPicture;
 
     private String currentDate, currentTime;
 
@@ -68,10 +73,11 @@ public class GroupChatActivity extends AppCompatActivity {
         currentUserID = mAuth.getCurrentUser().getUid();
 
         groupName = getIntent().getExtras().get("name").toString();
+        groupDescription = getIntent().getExtras().get("description").toString();
         adminID = getIntent().getExtras().get("adminID").toString();
+        groupPicture = getIntent().getExtras().get("picture").toString();
 
         initializeFields();
-        getUserInfo();
 
         mSendMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,8 +85,11 @@ public class GroupChatActivity extends AppCompatActivity {
                 String message = mUserMessageInput.getText().toString();
 
                 if (!TextUtils.isEmpty(message)) {
-                    saveMessageInfoToDatabase(message);
-                    mUserMessageInput.setText("");
+                    boolean result = saveMessageInfoToDatabase(message);
+
+                    if (result) {
+                        mUserMessageInput.setText("");
+                    }
                 }
             }
         });
@@ -93,6 +102,32 @@ public class GroupChatActivity extends AppCompatActivity {
         TextView mGroupName = mToolbar.findViewById(R.id.group_chat_name);
         mGroupName.setText(groupName);
 
+        TextView mGroupDescription = mToolbar.findViewById(R.id.group_chat_description);
+        mGroupDescription.setText(groupDescription);
+
+        if (groupPicture.equals("yes")) {
+            final CircleImageView mGroupImage = mToolbar.findViewById(R.id.group_chat_image);
+
+            final long ONE_MEGABYTE = 1024 * 1024;
+
+            storageReference.child(groupName + "-" + adminID + "-profile_pic")
+                    .getBytes(ONE_MEGABYTE)
+                    .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                        @Override
+                        public void onSuccess(byte[] bytes) {
+                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                            mGroupImage.setImageBitmap(bitmap);
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(GroupChatActivity.this, "Failed to load group picture.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        }
+
         mSendMessageButton = findViewById(R.id.send_group_message_btn);
         mUserMessageInput = findViewById(R.id.input_group_message);
 
@@ -102,75 +137,33 @@ public class GroupChatActivity extends AppCompatActivity {
                 new LinearLayoutManager(GroupChatActivity.this, LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(layoutManager);
 
-        getMessages();
-    }
-
-    private void getMessages() {
-        messages = new ArrayList<>();
-        db.collection("groups")
+        Query query = db.collection("groups")
                 .document(groupName + "-" + adminID)
                 .collection("messages")
-                .orderBy("timestamp")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                GroupMessage message = document.toObject(GroupMessage.class);
-                                messages.add(message);
-                            }
+                .orderBy("timestamp");
 
-                            setAdapter();
-                        }
-                    }
-                });
+        query.addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                if (e != null) {
+                    return;
+                }
+
+                messages = queryDocumentSnapshots.toObjects(GroupMessage.class);
+                setAdapter();
+            }
+        });
     }
 
     private void setAdapter() {
         mGroupChatAdapter = new GroupChatAdapter(messages);
         mRecyclerView.setAdapter(mGroupChatAdapter);
+        mRecyclerView.scrollToPosition(messages.size() - 1);
     }
 
-    private void getUserInfo() {
-        db.collection("users")
-                .document(currentUserID)
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        if (documentSnapshot.exists()) {
-                            currentUserName = documentSnapshot.getString("name");
-                            currentUserPic = documentSnapshot.getString("picture");
+    private boolean saveMessageInfoToDatabase(String message) {
+        final boolean[] returnValue = {true};
 
-                            assert currentUserPic != null;
-                            if (currentUserPic.equals("yes")) {
-                                final long ONE_MEGABYTE = 1024 * 1024;
-
-                                storageReference.child(currentUserID + "-profile_pic")
-                                        .getBytes(ONE_MEGABYTE)
-                                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                                            @Override
-                                            public void onSuccess(byte[] bytes) {
-                                                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                                            }
-                                        })
-                                        .addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                                Toast.makeText(GroupChatActivity.this, "Failed to load profile picture.",
-                                                        Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
-                            }
-                        } else {
-                            Toast.makeText(GroupChatActivity.this, "Failed to retrieve user information", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }
-
-    private void saveMessageInfoToDatabase(String message) {
         Calendar calForDate = Calendar.getInstance();
         SimpleDateFormat currentDateFormat = new SimpleDateFormat("dd/MM/yy");
         currentDate = currentDateFormat.format(calForDate.getTime());
@@ -191,9 +184,22 @@ public class GroupChatActivity extends AppCompatActivity {
                 .document(groupName + "-" + adminID)
                 .collection("messages")
                 .document()
-                .set(messageData);
+                .set(messageData)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (!task.isSuccessful()) {
+                            Toast.makeText(
+                                    GroupChatActivity.this,
+                                    "Couldn't send the message. Please check your Internet connection",
+                                    Toast.LENGTH_LONG
+                            ).show();
+                            returnValue[0] = false;
+                        }
+                    }
+                });
 
-        getMessages();
+        return returnValue[0];
     }
 
     @Override

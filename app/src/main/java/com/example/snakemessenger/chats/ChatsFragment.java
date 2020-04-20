@@ -20,14 +20,12 @@ public class ChatsFragment extends Fragment {
     private FloatingActionButton mNewChat;
 
     public ChatsFragment() {
-        // Required empty public constructor
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_chats, container, false);
 
         mNewChat = view.findViewById(R.id.new_chat_btn);

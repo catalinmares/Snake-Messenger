@@ -7,7 +7,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.example.snakemessenger.chats.ChatsFragment;
-import com.example.snakemessenger.friends.FriendsFragment;
+import com.example.snakemessenger.friendRequests.FriendRequestsFragment;
 import com.example.snakemessenger.groups.GroupsFragment;
 
 public class TabsAccessorAdapter extends FragmentPagerAdapter {
@@ -24,6 +24,8 @@ public class TabsAccessorAdapter extends FragmentPagerAdapter {
                 return new GroupsFragment();
             case 2:
                 return new FriendsFragment();
+            case 3:
+                return new FriendRequestsFragment();
             default:
                 return null;
         }
@@ -31,7 +33,7 @@ public class TabsAccessorAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 3;
+        return 4;
     }
 
     @Nullable
@@ -44,6 +46,8 @@ public class TabsAccessorAdapter extends FragmentPagerAdapter {
                 return "Groups";
             case 2:
                 return "Friends";
+            case 3:
+                return "Friend requests";
             default:
                 return null;
         }

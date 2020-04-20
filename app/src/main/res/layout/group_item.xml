@@ -23,12 +23,27 @@
             android:id="@+id/group_name_item"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:gravity="center"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:text="@string/contact_name"
+            android:text="Group name"
+            android:textColor="@color/colorAccent"
             android:layout_toEndOf="@+id/group_image_item"
             android:layout_marginStart="10dp"/>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/group_image_item"
+            android:layout_below="@id/group_name_item"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp">
+
+            <TextView
+                android:id="@+id/group_description_item"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:text="Group description"/>
+        </HorizontalScrollView>
     </RelativeLayout>
 </androidx.cardview.widget.CardView>
