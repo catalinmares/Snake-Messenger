@@ -2,23 +2,20 @@ package com.example.snakemessenger;
 
 import com.google.firebase.Timestamp;
 
-class GroupMessage {
+class Message {
     private String senderID;
     private String date;
     private String time;
     private String content;
-    private Timestamp timestamp;
 
-    public GroupMessage() {
-
+    public Message() {
     }
 
-    public GroupMessage(String senderID, String date, String time, String content, Timestamp timestamp) {
+    public Message(String senderID, String date, String time, String content) {
         this.senderID = senderID;
         this.date = date;
         this.time = time;
         this.content = content;
-        this.timestamp = timestamp;
     }
 
     public String getSenderID() {
@@ -51,13 +48,5 @@ class GroupMessage {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public Timestamp getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Timestamp timestamp) {
-        this.timestamp = timestamp;
     }
 }

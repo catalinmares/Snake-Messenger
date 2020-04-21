@@ -16,12 +16,12 @@ import com.google.firebase.storage.StorageReference;
 
 import java.util.List;
 
-public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatViewHolder> {
+public class ChatAdapter extends RecyclerView.Adapter<GroupChatViewHolder> {
     private FirebaseFirestore db;
     private StorageReference storageReference;
-    private List<GroupMessage> mMessages;
+    private List<Message> mMessages;
 
-    public GroupChatAdapter(List<GroupMessage> mMessages) {
+    public ChatAdapter(List<Message> mMessages) {
         this.mMessages = mMessages;
     }
 
@@ -39,7 +39,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull final GroupChatViewHolder holder, int position) {
-        GroupMessage currentMessage = mMessages.get(position);
+        Message currentMessage = mMessages.get(position);
 
         final String senderID = currentMessage.getSenderID();
         String messageContent = currentMessage.getContent();

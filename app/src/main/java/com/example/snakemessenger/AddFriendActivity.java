@@ -7,8 +7,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -104,7 +106,10 @@ public class AddFriendActivity extends AppCompatActivity {
                 new RecyclerTouchListener(AddFriendActivity.this, mUsersRecyclerView, new RecyclerViewClickListener() {
             @Override
             public void onClick(View view, int position) {
-                showUserProfile(users.get(position));
+                CircleImageView userPic = view.findViewById(R.id.friend_image_item);
+                BitmapDrawable drawable = (BitmapDrawable) userPic.getDrawable();
+                Bitmap image = drawable.getBitmap();
+                showUserProfile(users.get(position), image);
             }
 
             @Override
@@ -157,7 +162,7 @@ public class AddFriendActivity extends AppCompatActivity {
                 });
     }
 
-    private void showUserProfile(final User user) {
+    private void showUserProfile(final User user, Bitmap image) {
         final String userID = user.getUserID();
         String userName = user.getName();
         String userStatus = user.getStatus();
@@ -165,191 +170,87 @@ public class AddFriendActivity extends AppCompatActivity {
 
         mUserProfileName.setText(userName);
         mUserProfileStatus.setText(userStatus);
-
-        if (userPic.equals("yes")) {
-            final long ONE_MEGABYTE = 1024 * 1024;
-
-            storageReference.child(userID + "-profile_pic")
-                    .getBytes(ONE_MEGABYTE)
-                    .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                        @Override
-                        public void onSuccess(byte[] bytes) {
-                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            mUserProfilePicture.setImageBitmap(bitmap);
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(AddFriendActivity.this, "Failed to load profile picture.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    });
-        }
+        mUserProfilePicture.setImageBitmap(image);
 
         db.collection("users")
                 .document(currentUserID)
+                .collection("friends")
+                .document(userID)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
-                    public void onSuccess(final DocumentSnapshot documentSnapshot) {
-                        final User activeUser = documentSnapshot.toObject(User.class);
-
-                        db.collection("users")
-                                .document(userID)
-                                .collection("friend requests")
-                                .get()
-                                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                                    @Override
-                                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                                        boolean friendRequestFound = false;
-                                        for (DocumentSnapshot documentSnapshot1 : queryDocumentSnapshots) {
-                                            if (documentSnapshot1.getString("userID").equals(currentUserID)) {
-                                                friendRequestFound = true;
-                                                break;
-                                            }
-                                        }
-
-                                        if (friendRequestFound) {
-                                            mAddFriend.setText("Cancel request");
-                                            mAddFriend.setOnClickListener(new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View view) {
-                                                    cancelFriendRequest(activeUser, userID);
-                                                }
-                                            });
-                                        } else if (!activeUser.getFriends().contains(userID)) {
-                                            db.collection("users")
-                                                    .document(currentUserID)
-                                                    .collection("friend requests")
-                                                    .get()
-                                                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                                                        @Override
-                                                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                                                            boolean friendRequestRecieved = false;
-                                                            for (DocumentSnapshot document : queryDocumentSnapshots) {
-                                                                if (document.getString("userID").equals(userID)) {
-                                                                    friendRequestRecieved = true;
-                                                                    break;
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        if (documentSnapshot.exists()) {
+                            initializeUserFriendsFields(userID);
+                        } else {
+                            db.collection("users")
+                                    .document(userID)
+                                    .collection("friend requests")
+                                    .document(currentUserID)
+                                    .get()
+                                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                            if (documentSnapshot.exists() &&
+                                                    documentSnapshot.getString("status").equals("pending")) {
+                                                initializeUserFriendRequestSent(userID);
+                                            } else {
+                                                db.collection("users")
+                                                        .document(currentUserID)
+                                                        .collection("friend requests")
+                                                        .document(userID)
+                                                        .get()
+                                                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                                            @Override
+                                                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                                                if (documentSnapshot.exists() &&
+                                                                        documentSnapshot.getString("status").equals("pending")) {
+                                                                    initializeUserFriendRequestReceived(userID);
+                                                                } else {
+                                                                    initializeUserNotFriendsFields(userID);
                                                                 }
                                                             }
-
-                                                            if (friendRequestRecieved) {
-                                                                mAddFriend.setText("Accept request");
-                                                                mAddFriend.setOnClickListener(new View.OnClickListener() {
-                                                                    @Override
-                                                                    public void onClick(View view) {
-                                                                        acceptFriendRequest(activeUser, userID);
-                                                                    }
-                                                                });
-
-                                                                mSendMessage.setOnClickListener(new View.OnClickListener() {
-                                                                    @Override
-                                                                    public void onClick(View view) {
-                                                                        Toast.makeText(
-                                                                                AddFriendActivity.this,
-                                                                                "You need to accept the friend request first",
-                                                                                Toast.LENGTH_SHORT
-                                                                        ).show();
-                                                                    }
-                                                                });
-                                                            } else {
-                                                                mAddFriend.setText("Add friend");
-                                                                mAddFriend.setOnClickListener(new View.OnClickListener() {
-                                                                    @Override
-                                                                    public void onClick(View view) {
-                                                                        addFriend(activeUser, userID);
-                                                                    }
-                                                                });
-                                                            }
-                                                        }
-                                                    });
-                                        } else {
-                                            mAddFriend.setText("Remove friend");
-                                            mAddFriend.setOnClickListener(new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View view) {
-                                                    removeFriend(activeUser, userID);
-                                                }
-                                            });
+                                                        });
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                        }
                     }
                 });
 
         userProfile.show();
     }
 
-    private void addFriend(final User activeUser, final String userID) {
-        Map<String, Object> friendRequestData = new HashMap<>();
-        friendRequestData.put("userID", currentUserID);
-
-        db.collection("users")
-                .document(userID)
-                .collection("friend requests")
-                .document(activeUser.getUserID())
-                .set(friendRequestData)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            mAddFriend.setText("Cancel request");
-                            Toast.makeText(
-                                    AddFriendActivity.this,
-                                    "Friend request sent",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-
-                            mAddFriend.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    cancelFriendRequest(activeUser, userID);
-                                }
-                            });
-
-                            mSendMessage.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    Toast.makeText(
-                                            AddFriendActivity.this,
-                                            "The user didn't accept your request yet",
-                                            Toast.LENGTH_SHORT
-                                    ).show();
-                                }
-                            });
-                        } else {
-                            Toast.makeText(
-                                    AddFriendActivity.this,
-                                    "Couldn't send the friend request",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-                        }
-                    }
-                });
-    }
-
-    private void cancelFriendRequest(final User activeUser, final String userID) {
-        mAddFriend.setText("Add friend");
-        Toast.makeText(
-                AddFriendActivity.this,
-                "Request canceled",
-                Toast.LENGTH_SHORT
-        ).show();
-
-        db.collection("users")
-                .document(userID)
-                .collection("friend requests")
-                .document(activeUser.getUserID())
-                .delete();
-
+    private void initializeUserFriendsFields(final String userID) {
+        mAddFriend.setText("Remove friend");
         mAddFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addFriend(activeUser, userID);
+                removeFriend(userID);
             }
         });
 
+        mSendMessage.setText("Send message");
+        mSendMessage.setActivated(true);
+        mSendMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendUserToPrivateChat(userID);
+            }
+        });
+    }
+
+    private void initializeUserNotFriendsFields(final String userID) {
+        mAddFriend.setText("Add friend");
+        mAddFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addFriend(userID);
+            }
+        });
+
+        mSendMessage.setText("Send message");
+        mSendMessage.setActivated(false);
         mSendMessage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -362,50 +263,121 @@ public class AddFriendActivity extends AppCompatActivity {
         });
     }
 
-    private void acceptFriendRequest(final User activeUser, final String userID) {
-        mAddFriend.setText("Remove friend");
-        Toast.makeText(
-                AddFriendActivity.this,
-                "Request accepted",
-                Toast.LENGTH_SHORT
-        ).show();
-
-        List<String> friends = activeUser.getFriends();
-        friends.add(userID);
-        db.collection("users")
-                .document(activeUser.getUserID())
-                .update("friends", friends);
-
-        db.collection("users")
-                .document(userID)
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        User otherUser = documentSnapshot.toObject(User.class);
-
-                        List<String> otherFriends = otherUser.getFriends();
-                        otherFriends.add(activeUser.getUserID());
-
-                        db.collection("users")
-                                .document(userID)
-                                .update("friends", otherFriends);
-                    }
-                });
-
-        db.collection("users")
-                .document(activeUser.getUserID())
-                .collection("friend requests")
-                .document(userID)
-                .delete();
-
+    private void initializeUserFriendRequestSent(final String userID) {
+        mAddFriend.setText("Cancel request");
         mAddFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                removeFriend(activeUser, userID);
+                cancelFriendRequest(userID);
             }
         });
 
+        mSendMessage.setText("Send message");
+        mSendMessage.setActivated(false);
+        mSendMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(
+                        AddFriendActivity.this,
+                        "The user didn't accept your request yet",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+    }
+
+    private void initializeUserFriendRequestReceived(final String userID) {
+        mAddFriend.setText("Accept request");
+        mAddFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                acceptFriendRequest(userID);
+            }
+        });
+
+        mSendMessage.setText("Delete request");
+        mSendMessage.setActivated(true);
+        mSendMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                deleteFriendRequest(userID);
+            }
+        });
+    }
+
+    private void addFriend(final String userID) {
+        FriendListManager.processAddFriend(currentUserID, userID);
+
+        mAddFriend.setText("Cancel request");
+        mAddFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                cancelFriendRequest(userID);
+            }
+        });
+
+        mSendMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(
+                        AddFriendActivity.this,
+                        "The user didn't accept your request yet",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+
+        Toast.makeText(
+                AddFriendActivity.this,
+                "Friend request sent",
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    private void removeFriend(final String userID) {
+        FriendListManager.precessRemoveFriend(currentUserID, userID);
+
+        mAddFriend.setText("Add friend");
+        mAddFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addFriend(userID);
+            }
+        });
+
+        mSendMessage.setText("Send message");
+        mSendMessage.setActivated(false);
+        mSendMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(
+                        AddFriendActivity.this,
+                        "You need to send the user a friend request first",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+
+        Toast.makeText(
+                AddFriendActivity.this,
+                "Friend removed",
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    private void acceptFriendRequest(final String userID) {
+        FriendListManager.processAcceptFriendRequest(currentUserID, userID);
+
+        mAddFriend.setText("Remove friend");
+        mAddFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                removeFriend(userID);
+            }
+        });
+
+        mSendMessage.setText("Send message");
+        mSendMessage.setActivated(true);
         mSendMessage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -413,63 +385,26 @@ public class AddFriendActivity extends AppCompatActivity {
             }
         });
 
-        Map<String, Object> userData = new HashMap<>();
-        userData.put("userID", userID);
-
-        db.collection("users")
-                .document(activeUser.getUserID())
-                .collection("friends")
-                .document(userID)
-                .set(userData);
-
-        Map<String, Object> activeUserData = new HashMap<>();
-        activeUserData.put("userID", activeUser.getUserID());
-
-        db.collection("users")
-                .document(userID)
-                .collection("friends")
-                .document(activeUser.getUserID())
-                .set(activeUserData);
-    }
-
-    private void removeFriend(final User activeUser, final String userID) {
-        mAddFriend.setText("Add friend");
         Toast.makeText(
                 AddFriendActivity.this,
-                "Friend removed",
+                "Request accepted",
                 Toast.LENGTH_SHORT
         ).show();
+    }
 
-        List<String> myFriends = activeUser.getFriends();
-        myFriends.remove(userID);
-        db.collection("users")
-                .document(currentUserID)
-                .update("friends", myFriends);
+    private void deleteFriendRequest(final String userID) {
+        FriendListManager.processDeleteFriendRequest(currentUserID, userID);
 
-        db.collection("users")
-                .document(userID)
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        User otherUser = documentSnapshot.toObject(User.class);
-
-                        List<String> friends = otherUser.getFriends();
-                        friends.remove(currentUserID);
-
-                        db.collection("users")
-                                .document(userID)
-                                .update("friends", friends);
-                    }
-                });
-
+        mAddFriend.setText("Add friend");
         mAddFriend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addFriend(activeUser, userID);
+                addFriend(userID);
             }
         });
 
+        mSendMessage.setText("Send message");
+        mSendMessage.setActivated(false);
         mSendMessage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -481,20 +416,47 @@ public class AddFriendActivity extends AppCompatActivity {
             }
         });
 
-        db.collection("users")
-                .document(userID)
-                .collection("friends")
-                .document(activeUser.getUserID())
-                .delete();
+        Toast.makeText(
+                AddFriendActivity.this,
+                "Request deleted",
+                Toast.LENGTH_SHORT
+        ).show();
+    }
 
-        db.collection("users")
-                .document(activeUser.getUserID())
-                .collection("friends")
-                .document(userID)
-                .delete();
+    private void cancelFriendRequest(final String userID) {
+        FriendListManager.processDeleteFriendRequest(userID, currentUserID);
+
+        mAddFriend.setText("Add friend");
+        mAddFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addFriend(userID);
+            }
+        });
+
+        mSendMessage.setText("Send message");
+        mSendMessage.setActivated(false);
+        mSendMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(
+                        AddFriendActivity.this,
+                        "You need to send the user a friend request first",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+
+        Toast.makeText(
+                AddFriendActivity.this,
+                "Request canceled",
+                Toast.LENGTH_SHORT
+        ).show();
     }
 
     private void sendUserToPrivateChat(String userID) {
-
+        Intent privateChatIntent = new Intent(AddFriendActivity.this, PrivateChatActivity.class);
+        privateChatIntent.putExtra("userID", userID);
+        startActivity(privateChatIntent);
     }
 }

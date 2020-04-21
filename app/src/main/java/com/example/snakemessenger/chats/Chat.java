@@ -1,31 +1,20 @@
 package com.example.snakemessenger.chats;
 
 public class Chat {
-    private String friendName;
-    private String friendPhoto;
+    private String userID;
 
     public Chat() {
-
     }
 
-    public Chat(String friendName, String friendPhoto) {
-        this.friendName = friendName;
-        this.friendPhoto = friendPhoto;
+    public Chat(String userID) {
+        this.userID = userID;
     }
 
-    public String getFriendName() {
-        return friendName;
+    public String getUserID() {
+        return userID;
     }
 
-    public void setFriendName(String friendName) {
-        this.friendName = friendName;
-    }
-
-    public String getFriendPhoto() {
-        return friendPhoto;
-    }
-
-    public void setFriendPhoto(String friendPhoto) {
-        this.friendPhoto = friendPhoto;
+    public void setUserID(String userID) {
+        this.userID = userID;
     }
 }

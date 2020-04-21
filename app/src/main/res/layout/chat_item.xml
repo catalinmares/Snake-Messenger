@@ -14,13 +14,13 @@
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:layout_gravity="start"
-            android:id="@+id/friend_image_item"
+            android:id="@+id/chat_image_item"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:src="@drawable/profile_image"/>
 
         <TextView
-            android:id="@+id/friend_name_item"
+            android:id="@+id/chat_name_item"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -28,19 +28,19 @@
             android:textStyle="bold"
             android:text="@string/contact_name"
             android:textColor="@color/colorAccent"
-            android:layout_toEndOf="@+id/friend_image_item"
+            android:layout_toEndOf="@+id/chat_image_item"
             android:layout_marginStart="10dp"/>
 
         <TextView
-            android:id="@+id/friend_status_item"
+            android:id="@+id/chat_status_item"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:textSize="15sp"
             android:textStyle="bold"
             android:text="@string/status"
-            android:layout_toEndOf="@+id/friend_image_item"
-            android:layout_below="@+id/friend_name_item"
+            android:layout_toEndOf="@+id/chat_image_item"
+            android:layout_below="@+id/chat_name_item"
             android:layout_marginStart="10dp"/>
     </RelativeLayout>
 

@@ -11,7 +11,7 @@
         android:layout_height="match_parent">
 
         <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/group_chat_image"
+            android:id="@+id/chat_image"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:layout_marginStart="2dp"
@@ -19,12 +19,12 @@
             android:layout_centerVertical="true"/>
 
         <TextView
-            android:id="@+id/group_chat_name"
+            android:id="@+id/chat_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/group_chat_image"
+            android:layout_toEndOf="@+id/chat_image"
             android:layout_marginStart="10dp"
-            android:text="Group name"
+            android:text="Name"
             android:textStyle="bold"
             android:textSize="22sp"
             android:textColor="#FFFFFF"/>
@@ -32,12 +32,12 @@
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/group_chat_image"
-            android:layout_below="@id/group_chat_name"
+            android:layout_toEndOf="@id/chat_image"
+            android:layout_below="@id/chat_name"
             android:layout_marginStart="10dp">
 
             <TextView
-                android:id="@+id/group_chat_description"
+                android:id="@+id/chat_description"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Group description"/>

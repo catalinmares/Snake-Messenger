@@ -12,7 +12,7 @@
 
         <EditText
             android:id="@+id/friend_search_name"
-            android:layout_width="350dp"
+            android:layout_width="325dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:layout_centerVertical="true"
@@ -25,7 +25,9 @@
             android:src="@drawable/ic_search_search_48dp"
             android:layout_centerVertical="true"
             android:backgroundTint="@color/colorAccent"
-            android:layout_toEndOf="@+id/friend_search_name"/>
+            android:layout_toEndOf="@+id/friend_search_name"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"/>
     </RelativeLayout>
 
 </androidx.appcompat.widget.Toolbar>

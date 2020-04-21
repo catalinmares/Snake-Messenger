@@ -54,8 +54,8 @@ public class GroupChatActivity extends AppCompatActivity {
     private ImageButton mSendMessageButton;
     private EditText mUserMessageInput;
     private RecyclerView mRecyclerView;
-    private GroupChatAdapter mGroupChatAdapter;
-    private List<GroupMessage> messages;
+    private ChatAdapter mChatAdapter;
+    private List<Message> messages;
 
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
@@ -85,11 +85,8 @@ public class GroupChatActivity extends AppCompatActivity {
                 String message = mUserMessageInput.getText().toString();
 
                 if (!TextUtils.isEmpty(message)) {
-                    boolean result = saveMessageInfoToDatabase(message);
-
-                    if (result) {
-                        mUserMessageInput.setText("");
-                    }
+                    saveMessageInfoToDatabase(message);
+                    mUserMessageInput.setText("");
                 }
             }
         });
@@ -99,15 +96,15 @@ public class GroupChatActivity extends AppCompatActivity {
         mToolbar = findViewById(R.id.group_chat_bar_layout);
         setSupportActionBar(mToolbar);
 
-        TextView mGroupName = mToolbar.findViewById(R.id.group_chat_name);
+        TextView mGroupName = mToolbar.findViewById(R.id.chat_name);
         mGroupName.setText(groupName);
 
-        TextView mGroupDescription = mToolbar.findViewById(R.id.group_chat_description);
+        TextView mGroupDescription = mToolbar.findViewById(R.id.chat_description);
         mGroupDescription.setText(groupDescription);
 
-        if (groupPicture.equals("yes")) {
-            final CircleImageView mGroupImage = mToolbar.findViewById(R.id.group_chat_image);
+        final CircleImageView mGroupImage = mToolbar.findViewById(R.id.chat_image);
 
+        if (groupPicture.equals("yes")) {
             final long ONE_MEGABYTE = 1024 * 1024;
 
             storageReference.child(groupName + "-" + adminID + "-profile_pic")
@@ -122,10 +119,13 @@ public class GroupChatActivity extends AppCompatActivity {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
+                            mGroupImage.setImageResource(R.drawable.group_image);
                             Toast.makeText(GroupChatActivity.this, "Failed to load group picture.",
                                     Toast.LENGTH_SHORT).show();
                         }
                     });
+        } else {
+            mGroupImage.setImageResource(R.drawable.group_image);
         }
 
         mSendMessageButton = findViewById(R.id.send_group_message_btn);
@@ -149,28 +149,25 @@ public class GroupChatActivity extends AppCompatActivity {
                     return;
                 }
 
-                messages = queryDocumentSnapshots.toObjects(GroupMessage.class);
+                messages = queryDocumentSnapshots.toObjects(Message.class);
                 setAdapter();
             }
         });
     }
 
     private void setAdapter() {
-        mGroupChatAdapter = new GroupChatAdapter(messages);
-        mRecyclerView.setAdapter(mGroupChatAdapter);
+        mChatAdapter = new ChatAdapter(messages);
+        mRecyclerView.setAdapter(mChatAdapter);
         mRecyclerView.scrollToPosition(messages.size() - 1);
     }
 
-    private boolean saveMessageInfoToDatabase(String message) {
-        final boolean[] returnValue = {true};
-
+    private void saveMessageInfoToDatabase(String message) {
         Calendar calForDate = Calendar.getInstance();
         SimpleDateFormat currentDateFormat = new SimpleDateFormat("dd/MM/yy");
         currentDate = currentDateFormat.format(calForDate.getTime());
 
         Calendar calForTime = Calendar.getInstance();
         SimpleDateFormat currentTimeFormat = new SimpleDateFormat("HH:mm");
-
         currentTime = currentTimeFormat.format(calForTime.getTime());
 
         Map<String, Object> messageData = new HashMap<String, Object>();
@@ -184,29 +181,14 @@ public class GroupChatActivity extends AppCompatActivity {
                 .document(groupName + "-" + adminID)
                 .collection("messages")
                 .document()
-                .set(messageData)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (!task.isSuccessful()) {
-                            Toast.makeText(
-                                    GroupChatActivity.this,
-                                    "Couldn't send the message. Please check your Internet connection",
-                                    Toast.LENGTH_LONG
-                            ).show();
-                            returnValue[0] = false;
-                        }
-                    }
-                });
-
-        return returnValue[0];
+                .set(messageData);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
-        getMenuInflater().inflate(R.menu.options_menu, menu);
+        getMenuInflater().inflate(R.menu.group_options_menu, menu);
 
         return true;
     }
