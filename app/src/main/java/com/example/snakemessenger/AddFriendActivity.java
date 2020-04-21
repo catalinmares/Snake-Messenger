@@ -166,7 +166,6 @@ public class AddFriendActivity extends AppCompatActivity {
         final String userID = user.getUserID();
         String userName = user.getName();
         String userStatus = user.getStatus();
-        String userPic = user.getPicture();
 
         mUserProfileName.setText(userName);
         mUserProfileStatus.setText(userStatus);

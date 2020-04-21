@@ -8,18 +8,16 @@ public class User {
     private String email;
     private String picture;
     private String status;
-    private List<String> friends;
 
     public User() {
     }
 
-    public User(String userID, String name, String email, String picture, String status, List<String> friends) {
+    public User(String userID, String name, String email, String picture, String status) {
         this.userID = userID;
         this.name = name;
         this.email = email;
         this.picture = picture;
         this.status = status;
-        this.friends = friends;
     }
 
     public String getUserID() {
@@ -60,13 +58,5 @@ public class User {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public List<String> getFriends() {
-        return friends;
-    }
-
-    public void setFriends(List<String> friends) {
-        this.friends = friends;
     }
 }

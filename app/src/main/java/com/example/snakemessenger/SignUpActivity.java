@@ -171,8 +171,6 @@ public class SignUpActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            mProgressDialog.dismiss();
-
                             FirebaseUser user = mAuth.getCurrentUser();
                             assert user != null;
 
@@ -239,7 +237,8 @@ public class SignUpActivity extends AppCompatActivity {
 
                             userData.put("email", email);
                             userData.put("status", "Available");
-                            userData.put("friends", new ArrayList<String>());
+
+                            mProgressDialog.dismiss();
 
                             docRef.set(userData)
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
