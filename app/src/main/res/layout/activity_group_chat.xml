@@ -39,6 +39,7 @@
             android:layout_height="wrap_content"
             android:hint="Type a message"
             android:padding="17dp"
+            android:inputType="textCapSentences"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 

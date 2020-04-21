@@ -196,8 +196,6 @@ public class PrivateChatActivity extends AppCompatActivity {
                 setAdapter();
             }
         });
-
-
     }
 
     private void setAdapter() {
