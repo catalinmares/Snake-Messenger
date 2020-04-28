@@ -106,7 +106,6 @@ public class GroupChatActivity extends AppCompatActivity {
 
         if (groupPicture.equals("yes")) {
             final long ONE_MEGABYTE = 1024 * 1024;
-
             storageReference.child(groupName + "-" + adminID + "-profile_pic")
                     .getBytes(ONE_MEGABYTE)
                     .addOnSuccessListener(new OnSuccessListener<byte[]>() {

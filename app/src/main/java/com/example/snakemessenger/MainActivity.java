@@ -1,6 +1,7 @@
 package com.example.snakemessenger;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -21,6 +22,8 @@ import androidx.viewpager.widget.ViewPager;
 import android.view.Menu;
 import android.widget.Toast;
 
+import java.util.HashMap;
+
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "SnakeMessenger";
     private FirebaseAuth mAuth;
@@ -32,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private TabsAccessorAdapter mTabsAccessorAdapter;
 
     private FirebaseUser currentUser;
+    public static HashMap<String, Bitmap> profilePictures = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
         if (currentUser == null) {
             sendUserToLoginActivity();
         }
-
         mViewPager = findViewById(R.id.main_tabs_pager);
         mTabsAccessorAdapter = new TabsAccessorAdapter(getSupportFragmentManager());
         mViewPager.setAdapter(mTabsAccessorAdapter);
@@ -71,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         super.onOptionsItemSelected(item);
+        Toast.makeText(MainActivity.this, "Ceva", Toast.LENGTH_SHORT).show();
 
         if (item.getItemId() == R.id.main_settings_option) {
             sendUserToSettingsActivity();

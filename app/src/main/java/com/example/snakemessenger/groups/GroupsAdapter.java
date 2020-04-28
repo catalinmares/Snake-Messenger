@@ -52,7 +52,6 @@ class GroupsAdapter extends RecyclerView.Adapter<GroupsViewHolder> {
 
         if (groupPicture.equals("yes")) {
             final long ONE_MEGABYTE = 1024 * 1024;
-
             storageReference.child(groupName + "-" + groupAdmin + "-profile_pic")
                     .getBytes(ONE_MEGABYTE)
                     .addOnSuccessListener(new OnSuccessListener<byte[]>() {

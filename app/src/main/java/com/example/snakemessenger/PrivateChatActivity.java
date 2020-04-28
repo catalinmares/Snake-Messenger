@@ -54,6 +54,7 @@ public class PrivateChatActivity extends AppCompatActivity {
 
     private String currentUserID;
     private String friendID;
+    private HashMap<String, Bitmap> profilePictures;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,7 +123,7 @@ public class PrivateChatActivity extends AppCompatActivity {
                             DocumentSnapshot userDoc = task.getResult();
 
                             if (userDoc.exists()) {
-                                User user = userDoc.toObject(User.class);
+                                final User user = userDoc.toObject(User.class);
 
                                 mFriendName.setText(user.getName());
                                 mFriendStatus.setText(user.getStatus());
@@ -130,25 +131,31 @@ public class PrivateChatActivity extends AppCompatActivity {
                                 if (user.getPicture().equals("yes")) {
                                     final long ONE_MEGABYTE = 1024 * 1024;
 
-                                    storageReference.child(user.getUserID() + "-profile_pic")
-                                            .getBytes(ONE_MEGABYTE)
-                                            .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                                                @Override
-                                                public void onSuccess(byte[] bytes) {
-                                                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                                                    mFriendProfilePic.setImageBitmap(bitmap);
-                                                }
-                                            })
-                                            .addOnFailureListener(new OnFailureListener() {
-                                                @Override
-                                                public void onFailure(@NonNull Exception e) {
-                                                    Toast.makeText(
-                                                            PrivateChatActivity.this,
-                                                            "Failed to load friend's profile picture.",
-                                                            Toast.LENGTH_SHORT
-                                                    ).show();
-                                                }
-                                            });
+                                    if (MainActivity.profilePictures.containsKey(user.getUserID())) {
+                                        mFriendProfilePic.setImageBitmap(MainActivity.profilePictures.get(user.getUserID()));
+                                    } else {
+
+                                        storageReference.child(user.getUserID() + "-profile_pic")
+                                                .getBytes(ONE_MEGABYTE)
+                                                .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                                                    @Override
+                                                    public void onSuccess(byte[] bytes) {
+                                                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                                        mFriendProfilePic.setImageBitmap(bitmap);
+                                                        MainActivity.profilePictures.put(user.getUserID(), bitmap);
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        Toast.makeText(
+                                                                PrivateChatActivity.this,
+                                                                "Failed to load friend's profile picture.",
+                                                                Toast.LENGTH_SHORT
+                                                        ).show();
+                                                    }
+                                                });
+                                    }
                                 }
                             } else {
                                 Toast.makeText(
@@ -178,10 +185,11 @@ public class PrivateChatActivity extends AppCompatActivity {
                 new LinearLayoutManager(PrivateChatActivity.this, LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(layoutManager);
 
-        Query query = db.collection("users")
-                .document(currentUserID)
-                .collection("friends")
-                .document(friendID)
+        String chatID = friendID.compareTo(currentUserID) > 0 ?
+                friendID.concat(currentUserID) :
+                currentUserID.concat(friendID);
+        Query query = db.collection("chats")
+                .document(chatID)
                 .collection("messages")
                 .orderBy("timestamp");
 
@@ -220,18 +228,13 @@ public class PrivateChatActivity extends AppCompatActivity {
         messageData.put("content", message);
         messageData.put("timestamp", Timestamp.now());
 
-        db.collection("users")
-                .document(currentUserID)
-                .collection("friends")
-                .document(friendID)
-                .collection("messages")
-                .document()
-                .set(messageData);
 
-        db.collection("users")
-                .document(friendID)
-                .collection("friends")
-                .document(currentUserID)
+        String chatID = friendID.compareTo(currentUserID) > 0 ?
+                friendID.concat(currentUserID) :
+                currentUserID.concat(friendID);
+
+        db.collection("chats")
+                .document(chatID)
                 .collection("messages")
                 .document()
                 .set(messageData);

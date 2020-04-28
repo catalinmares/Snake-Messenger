@@ -1,6 +1,7 @@
 package com.example.snakemessenger.chats;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -26,6 +27,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -42,6 +44,7 @@ public class ChatsFragment extends Fragment {
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private FirebaseFirestore db;
+    private HashMap<String, Bitmap> profilePictures = new HashMap<>();
 
     public ChatsFragment() {
     }

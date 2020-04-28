@@ -59,16 +59,20 @@ public class ChatAdapter extends RecyclerView.Adapter<GroupChatViewHolder> {
                             assert hasPhoto != null;
                             if (hasPhoto.equals("yes")) {
                                 final long ONE_MEGABYTE = 1024 * 1024;
-
-                                storageReference.child(senderID + "-profile_pic")
-                                        .getBytes(ONE_MEGABYTE)
-                                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                                            @Override
-                                            public void onSuccess(byte[] bytes) {
-                                                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                                                holder.getmSenderProfilePicture().setImageBitmap(bitmap);
-                                            }
-                                        });
+                                if (MainActivity.profilePictures.containsKey(senderID)) {
+                                    holder.getmSenderProfilePicture().setImageBitmap(MainActivity.profilePictures.get(senderID));
+                                } else {
+                                    storageReference.child(senderID + "-profile_pic")
+                                            .getBytes(ONE_MEGABYTE)
+                                            .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                                                @Override
+                                                public void onSuccess(byte[] bytes) {
+                                                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                                    holder.getmSenderProfilePicture().setImageBitmap(bitmap);
+                                                    MainActivity.profilePictures.put(senderID, bitmap);
+                                                }
+                                            });
+                                }
                             }
                         }
                     }

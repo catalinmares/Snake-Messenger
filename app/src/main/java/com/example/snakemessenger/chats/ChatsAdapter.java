@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.snakemessenger.MainActivity;
 import com.example.snakemessenger.R;
 import com.example.snakemessenger.SettingsActivity;
 import com.example.snakemessenger.User;
@@ -21,6 +22,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
@@ -29,11 +32,13 @@ class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
 
     private FirebaseFirestore db;
     private StorageReference storageReference;
+    private HashMap<String, Bitmap> profilePictures;
 
     public ChatsAdapter(Context mContext, List<Chat> mChats) {
         this.mContext = mContext;
         this.mChats = mChats;
     }
+
 
     @NonNull
     @Override
@@ -49,7 +54,7 @@ class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull final ChatItemViewHolder holder, int position) {
-        Chat currentChat = mChats.get(position);
+        final Chat currentChat = mChats.get(position);
 
         db.collection("users")
                 .document(currentChat.getUserID())
@@ -58,23 +63,27 @@ class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         if (documentSnapshot.exists()) {
-                            User currentUser = documentSnapshot.toObject(User.class);
+                            final User currentUser = documentSnapshot.toObject(User.class);
 
                             holder.getmUserProfileName().setText(currentUser.getName());
                             holder.getmUserStatus().setText(currentUser.getStatus());
 
                             if (currentUser.getPicture().equals("yes")) {
                                 final long ONE_MEGABYTE = 1024 * 1024;
-
-                                storageReference.child(currentUser.getUserID() + "-profile_pic")
-                                        .getBytes(ONE_MEGABYTE)
-                                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                                            @Override
-                                            public void onSuccess(byte[] bytes) {
-                                                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                                                holder.getmUserProfilePic().setImageBitmap(bitmap);
-                                            }
-                                        });
+                                if (MainActivity.profilePictures.containsKey(currentUser.getUserID())) {
+                                    holder.getmUserProfilePic().setImageBitmap(MainActivity.profilePictures.get(currentUser.getUserID()));
+                                } else {
+                                    storageReference.child(currentUser.getUserID() + "-profile_pic")
+                                            .getBytes(ONE_MEGABYTE)
+                                            .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                                                @Override
+                                                public void onSuccess(byte[] bytes) {
+                                                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                                    holder.getmUserProfilePic().setImageBitmap(bitmap);
+                                                    MainActivity.profilePictures.put(currentUser.getUserID(), bitmap);
+                                                }
+                                            });
+                                }
                             }
                         }
                     }
