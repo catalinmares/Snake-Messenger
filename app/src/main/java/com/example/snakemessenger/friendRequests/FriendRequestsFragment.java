@@ -72,9 +72,8 @@ public class FriendRequestsFragment extends Fragment {
                 new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
         mFriendRequestsRecyclerView.setLayoutManager(layoutManager);
 
-        Query query = db.collection("users")
-                .document(currentUser.getUid())
-                .collection("friend requests")
+        Query query = db.collection("requests")
+                .whereEqualTo("receiver", currentUser.getUid())
                 .orderBy("timestamp", Query.Direction.DESCENDING);
 
         query.addSnapshotListener(new EventListener<QuerySnapshot>() {
@@ -96,29 +95,27 @@ public class FriendRequestsFragment extends Fragment {
                 mFriendRequestsRecyclerView, new RecyclerViewClickListener() {
             @Override
             public void onClick(View view, int position) {
-                if (friendRequests.get(position).getStatus().equals("pending")) {
-                    CircleImageView profilePic = view.findViewById(R.id.friend_request_image_item);
-                    BitmapDrawable drawable = (BitmapDrawable) profilePic.getDrawable();
-                    final Bitmap image = drawable.getBitmap();
+                CircleImageView profilePic = view.findViewById(R.id.friend_request_image_item);
+                BitmapDrawable drawable = (BitmapDrawable) profilePic.getDrawable();
+                final Bitmap image = drawable.getBitmap();
 
-                    db.collection("users")
-                            .document(friendRequests.get(position).getUserID())
-                            .get()
-                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                @Override
-                                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                    if (documentSnapshot.exists()) {
-                                        showUserProfile(documentSnapshot.toObject(User.class), image);
-                                    } else {
-                                        Toast.makeText(
-                                                getActivity(),
-                                                "There was an error processing the request",
-                                                Toast.LENGTH_SHORT
-                                        ).show();
-                                    }
+                db.collection("users")
+                        .document(friendRequests.get(position).getSender())
+                        .get()
+                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                if (documentSnapshot.exists()) {
+                                    showUserProfile(documentSnapshot.toObject(User.class), image);
+                                } else {
+                                    Toast.makeText(
+                                            getActivity(),
+                                            "There was an error processing the request",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
                                 }
-                            });
-                }
+                            }
+                        });
             }
 
             @Override
@@ -162,13 +159,32 @@ public class FriendRequestsFragment extends Fragment {
         mAcceptRequest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FriendListManager.processAcceptFriendRequest(currentUser.getUid(), userID);
+                db.collection("requests")
+                        .whereEqualTo("sender", userID)
+                        .whereEqualTo("receiver", currentUser.getUid())
+                        .get()
+                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                            @Override
+                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                if (queryDocumentSnapshots.getDocuments().isEmpty()) {
+                                    Toast.makeText(
+                                            getActivity(),
+                                            "Friend request not available anymore",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                } else {
+                                    FriendListManager.processAcceptFriendRequest(currentUser.getUid(), userID);
 
-                Toast.makeText(
-                        getActivity(),
-                        "Request accepted",
-                        Toast.LENGTH_SHORT
-                ).show();
+                                    Toast.makeText(
+                                            getActivity(),
+                                            "Request accepted",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+
+                                    mAdapter.notifyDataSetChanged();
+                                }
+                            }
+                        });
 
                 userProfileDialog.dismiss();
             }
@@ -178,13 +194,32 @@ public class FriendRequestsFragment extends Fragment {
         mDeleteRequest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FriendListManager.processDeleteFriendRequest(currentUser.getUid(), userID);
+                db.collection("requests")
+                        .whereEqualTo("sender", userID)
+                        .whereEqualTo("receiver", currentUser.getUid())
+                        .get()
+                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                            @Override
+                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                if (queryDocumentSnapshots.getDocuments().isEmpty()) {
+                                    Toast.makeText(
+                                            getActivity(),
+                                            "Friend request not available anymore",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                } else {
+                                    FriendListManager.processDeleteFriendRequest(currentUser.getUid(), userID);
 
-                Toast.makeText(
-                        getActivity(),
-                        "Request deleted",
-                        Toast.LENGTH_SHORT
-                ).show();
+                                    Toast.makeText(
+                                            getActivity(),
+                                            "Request deleted",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+
+                                    mAdapter.notifyDataSetChanged();
+                                }
+                            }
+                        });
 
                 userProfileDialog.dismiss();
             }

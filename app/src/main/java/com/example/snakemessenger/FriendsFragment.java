@@ -22,12 +22,11 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QuerySnapshot;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -40,7 +39,7 @@ public class FriendsFragment extends Fragment {
     private View friendsFragmentView;
     private RecyclerView mFriendsRecyclerView;
     private FriendsAdapter mAdapter;
-    private List<Friend> friends;
+    private List<String> friends;
     private FloatingActionButton mAddFriend;
 
     private FirebaseAuth mAuth;
@@ -85,18 +84,16 @@ public class FriendsFragment extends Fragment {
                 new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
         mFriendsRecyclerView.setLayoutManager(layoutManager);
 
-        Query query = db.collection("users")
+        db.collection("users")
                 .document(currentUser.getUid())
-                .collection("friends");
-
-        query.addSnapshotListener(new EventListener<QuerySnapshot>() {
+                .addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
-            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
                 if (e != null) {
                     return;
                 }
 
-                friends = queryDocumentSnapshots.toObjects(Friend.class);
+                friends = (List<String>) documentSnapshot.get("friends");
                 mAdapter = new FriendsAdapter(getActivity(), friends);
                 mFriendsRecyclerView.setAdapter(mAdapter);
             }
@@ -113,7 +110,7 @@ public class FriendsFragment extends Fragment {
                 final Bitmap image = drawable.getBitmap();
 
                 db.collection("users")
-                        .document(friends.get(position).getUserID())
+                        .document(friends.get(position))
                         .get()
                         .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                             @Override
@@ -155,7 +152,6 @@ public class FriendsFragment extends Fragment {
         final String userID = user.getUserID();
         String userName = user.getName();
         String userStatus = user.getStatus();
-        String userPic = user.getPicture();
 
         mUserProfileName.setText(userName);
         mUserProfileStatus.setText(userStatus);

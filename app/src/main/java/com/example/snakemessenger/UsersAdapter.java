@@ -44,11 +44,11 @@ class UsersAdapter extends RecyclerView.Adapter<UsersViewHolder> {
         holder.getmContactName().setText(currentUser.getName());
         holder.getmContactStatus().setText(currentUser.getStatus());
 
-        if (currentUser.getPicture().equals("yes")) {
-            final long ONE_MEGABYTE = 1024 * 1024;
+        if (currentUser.getPicture()) {
+            final long TEN_MEGABYTES = 10 * 1024 * 1024;
 
             storageReference.child(currentUser.getUserID() + "-profile_pic")
-                    .getBytes(ONE_MEGABYTE)
+                    .getBytes(TEN_MEGABYTES)
                     .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         @Override
                         public void onSuccess(byte[] bytes) {

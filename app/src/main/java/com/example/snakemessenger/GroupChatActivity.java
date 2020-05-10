@@ -7,6 +7,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -19,10 +20,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.EventListener;
@@ -33,8 +32,6 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,15 +39,19 @@ import java.util.Map;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class GroupChatActivity extends AppCompatActivity {
+    private static final int UPDATE_GROUP_SETTINGS = 17;
+    private String groupID;
     private String groupName;
     private String adminID;
     private String currentUserID;
     private String groupDescription;
-    private String groupPicture;
-
-    private String currentDate, currentTime;
+    private boolean groupPicture;
 
     private Toolbar mToolbar;
+    private TextView mGroupName;
+    private TextView mGroupDescription;
+    private CircleImageView mGroupImage;
+
     private ImageButton mSendMessageButton;
     private EditText mUserMessageInput;
     private RecyclerView mRecyclerView;
@@ -72,10 +73,11 @@ public class GroupChatActivity extends AppCompatActivity {
 
         currentUserID = mAuth.getCurrentUser().getUid();
 
-        groupName = getIntent().getExtras().get("name").toString();
-        groupDescription = getIntent().getExtras().get("description").toString();
-        adminID = getIntent().getExtras().get("adminID").toString();
-        groupPicture = getIntent().getExtras().get("picture").toString();
+        groupID = getIntent().getExtras().getString("groupID");
+        groupName = getIntent().getExtras().getString("name");
+        groupDescription = getIntent().getExtras().getString("description");
+        adminID = getIntent().getExtras().getString("adminID");
+        groupPicture = getIntent().getExtras().getBoolean("picture");
 
         initializeFields();
 
@@ -96,18 +98,18 @@ public class GroupChatActivity extends AppCompatActivity {
         mToolbar = findViewById(R.id.group_chat_bar_layout);
         setSupportActionBar(mToolbar);
 
-        TextView mGroupName = mToolbar.findViewById(R.id.chat_name);
+        mGroupName = mToolbar.findViewById(R.id.chat_name);
         mGroupName.setText(groupName);
 
-        TextView mGroupDescription = mToolbar.findViewById(R.id.chat_description);
+        mGroupDescription = mToolbar.findViewById(R.id.chat_description);
         mGroupDescription.setText(groupDescription);
 
-        final CircleImageView mGroupImage = mToolbar.findViewById(R.id.chat_image);
+        mGroupImage = mToolbar.findViewById(R.id.chat_image);
 
-        if (groupPicture.equals("yes")) {
-            final long ONE_MEGABYTE = 1024 * 1024;
-            storageReference.child(groupName + "-" + adminID + "-profile_pic")
-                    .getBytes(ONE_MEGABYTE)
+        if (groupPicture) {
+            final long TEN_MEGABYTES = 10 * 1024 * 1024;
+            storageReference.child(groupID + "-profile_pic")
+                    .getBytes(TEN_MEGABYTES)
                     .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         @Override
                         public void onSuccess(byte[] bytes) {
@@ -137,7 +139,7 @@ public class GroupChatActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(layoutManager);
 
         Query query = db.collection("groups")
-                .document(groupName + "-" + adminID)
+                .document(groupID)
                 .collection("messages")
                 .orderBy("timestamp");
 
@@ -161,23 +163,13 @@ public class GroupChatActivity extends AppCompatActivity {
     }
 
     private void saveMessageInfoToDatabase(String message) {
-        Calendar calForDate = Calendar.getInstance();
-        SimpleDateFormat currentDateFormat = new SimpleDateFormat("dd/MM/yy");
-        currentDate = currentDateFormat.format(calForDate.getTime());
-
-        Calendar calForTime = Calendar.getInstance();
-        SimpleDateFormat currentTimeFormat = new SimpleDateFormat("HH:mm");
-        currentTime = currentTimeFormat.format(calForTime.getTime());
-
         Map<String, Object> messageData = new HashMap<String, Object>();
-        messageData.put("senderID", currentUserID);
-        messageData.put("date", currentDate);
-        messageData.put("time", currentTime);
+        messageData.put("sender", currentUserID);
         messageData.put("content", message);
         messageData.put("timestamp", Timestamp.now());
 
         db.collection("groups")
-                .document(groupName + "-" + adminID)
+                .document(groupID)
                 .collection("messages")
                 .document()
                 .set(messageData);
@@ -194,6 +186,69 @@ public class GroupChatActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        return super.onOptionsItemSelected(item);
+        super.onOptionsItemSelected(item);
+
+        if (item.getItemId() == R.id.edit_group_option) {
+            if (currentUserID.equals(adminID)) {
+                sendUserToEditGroupActivity();
+            } else {
+                Toast.makeText(
+                        GroupChatActivity.this,
+                        "You are not allowed to edit this group",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        } else if (item.getItemId() == R.id.leave_group_option) {
+            leaveGroup();
+        }
+
+        return true;
+    }
+
+    private void leaveGroup() {
+
+    }
+
+    private void sendUserToEditGroupActivity() {
+        Intent editGroupIntent = new Intent(GroupChatActivity.this, CreateGroupActivity.class);
+        editGroupIntent.putExtra("new", false);
+        editGroupIntent.putExtra("groupID", groupID);
+        editGroupIntent.putExtra("name", groupName);
+        editGroupIntent.putExtra("description", groupDescription);
+        editGroupIntent.putExtra("picture", groupPicture);
+        startActivityForResult(editGroupIntent, UPDATE_GROUP_SETTINGS);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == UPDATE_GROUP_SETTINGS && resultCode == RESULT_OK) {
+            mGroupName.setText(data.getExtras().getString("name"));
+            mGroupDescription.setText(data.getExtras().getString("description"));
+
+            boolean updatedPic = data.getExtras().getBoolean("picture");
+
+            if (updatedPic) {
+                final long TEN_MEGABYTES = 10 * 1024 * 1024;
+                storageReference.child(groupID + "-profile_pic")
+                        .getBytes(TEN_MEGABYTES)
+                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                            @Override
+                            public void onSuccess(byte[] bytes) {
+                                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                mGroupImage.setImageBitmap(bitmap);
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                mGroupImage.setImageResource(R.drawable.group_image);
+                                Toast.makeText(GroupChatActivity.this, "Failed to load group picture.",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+        }
     }
 }

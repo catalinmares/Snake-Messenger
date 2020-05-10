@@ -1,91 +1,126 @@
 package com.example.snakemessenger;
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FriendListManager {
 
     public static void processAddFriend(String currentUserID, String otherUserID) {
-        Calendar calForDate = Calendar.getInstance();
-        SimpleDateFormat currentDateFormat = new SimpleDateFormat("dd/MM/yy");
-        String currentDate = currentDateFormat.format(calForDate.getTime());
-
-        Calendar calForTime = Calendar.getInstance();
-        SimpleDateFormat currentTimeFormat = new SimpleDateFormat("HH:mm");
-        String currentTime = currentTimeFormat.format(calForTime.getTime());
-
         Map<String, Object> friendRequestData = new HashMap<>();
-        friendRequestData.put("userID", currentUserID);
-        friendRequestData.put("time", currentTime);
-        friendRequestData.put("date", currentDate);
+        friendRequestData.put("sender", currentUserID);
+        friendRequestData.put("receiver", otherUserID);
         friendRequestData.put("timestamp", Timestamp.now());
-        friendRequestData.put("status", "pending");
 
         FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(otherUserID)
-                .collection("friend requests")
-                .document(currentUserID)
+                .collection("requests")
+                .document()
                 .set(friendRequestData);
     }
 
-    public static void precessRemoveFriend(String currentUserID, String otherUserID) {
+    public static void precessRemoveFriend(final String currentUserID, final String otherUserID) {
         FirebaseFirestore.getInstance()
                 .collection("users")
                 .document(otherUserID)
-                .collection("friends")
-                .document(currentUserID)
-                .delete();
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        if (documentSnapshot.exists()) {
+                            List<String> friends = (List<String>) documentSnapshot.get("friends");
+                            friends.remove(currentUserID);
+                            documentSnapshot.getReference().update("friends", friends);
+                        }
+                    }
+                });
 
         FirebaseFirestore.getInstance()
                 .collection("users")
                 .document(currentUserID)
-                .collection("friends")
-                .document(otherUserID)
-                .delete();
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        if (documentSnapshot.exists()) {
+                            List<String> friends = (List<String>) documentSnapshot.get("friends");
+                            friends.remove(otherUserID);
+                            documentSnapshot.getReference().update("friends", friends);
+                        }
+                    }
+                });
     }
 
-    public static void processAcceptFriendRequest(String currentUserID, String otherUserID) {
+    public static void processAcceptFriendRequest(final String currentUserID, final String otherUserID) {
+        FirebaseFirestore.getInstance()
+                .collection("requests")
+                .whereEqualTo("sender", otherUserID)
+                .whereEqualTo("receiver", currentUserID)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                            doc.getReference().delete();
+                        }
+                    }
+                });
+
         FirebaseFirestore.getInstance()
                 .collection("users")
                 .document(currentUserID)
-                .collection("friend requests")
-                .document(otherUserID)
-                .update("status", "accepted");
-
-        Map<String, Object> otherUserData = new HashMap<>();
-        otherUserData.put("userID", otherUserID);
-
-        FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(currentUserID)
-                .collection("friends")
-                .document(otherUserID)
-                .set(otherUserData);
-
-        Map<String, Object> currentUserData = new HashMap<>();
-        currentUserData.put("userID", currentUserID);
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        if (documentSnapshot.exists()) {
+                            List<String> friends = (List<String>) documentSnapshot.get("friends");
+                            friends.add(otherUserID);
+                            documentSnapshot.getReference().update("friends", friends);
+                        }
+                    }
+                });
 
         FirebaseFirestore.getInstance()
                 .collection("users")
                 .document(otherUserID)
-                .collection("friends")
-                .document(currentUserID)
-                .set(currentUserData);
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        if (documentSnapshot.exists()) {
+                            List<String> friends = (List<String>) documentSnapshot.get("friends");
+                            friends.add(currentUserID);
+                            documentSnapshot.getReference().update("friends", friends);
+                        }
+                    }
+                });
     }
 
     public static void processDeleteFriendRequest(String currentUserID, String otherUserID) {
         FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(currentUserID)
-                .collection("friend requests")
-                .document(otherUserID)
-                .update("status", "deleted");
+                .collection("requests")
+                .whereEqualTo("sender", otherUserID)
+                .whereEqualTo("receiver", currentUserID)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot doc : task.getResult()) {
+                                doc.getReference().delete();
+                            }
+                        }
+                    }
+                });
     }
 }

@@ -6,33 +6,31 @@ import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.snakemessenger.MainActivity;
 import com.example.snakemessenger.R;
-import com.example.snakemessenger.SettingsActivity;
 import com.example.snakemessenger.User;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
     private Context mContext;
     private List<Chat> mChats;
 
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
     private FirebaseFirestore db;
     private StorageReference storageReference;
-    private HashMap<String, Bitmap> profilePictures;
 
     public ChatsAdapter(Context mContext, List<Chat> mChats) {
         this.mContext = mContext;
@@ -46,6 +44,8 @@ class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
         View itemView = LayoutInflater.from(mContext)
                 .inflate(R.layout.chat_item, parent, false);
 
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
         db = FirebaseFirestore.getInstance();
         storageReference = FirebaseStorage.getInstance().getReference();
 
@@ -55,9 +55,11 @@ class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull final ChatItemViewHolder holder, int position) {
         final Chat currentChat = mChats.get(position);
+        List<String> users = currentChat.getUsers();
+        users.remove(currentUser.getUid());
 
         db.collection("users")
-                .document(currentChat.getUserID())
+                .document(users.get(0))
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
@@ -68,13 +70,13 @@ class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
                             holder.getmUserProfileName().setText(currentUser.getName());
                             holder.getmUserStatus().setText(currentUser.getStatus());
 
-                            if (currentUser.getPicture().equals("yes")) {
-                                final long ONE_MEGABYTE = 1024 * 1024;
+                            if (currentUser.getPicture()) {
+                                final long TEN_MEGABYTES = 10 * 1024 * 1024;
                                 if (MainActivity.profilePictures.containsKey(currentUser.getUserID())) {
                                     holder.getmUserProfilePic().setImageBitmap(MainActivity.profilePictures.get(currentUser.getUserID()));
                                 } else {
                                     storageReference.child(currentUser.getUserID() + "-profile_pic")
-                                            .getBytes(ONE_MEGABYTE)
+                                            .getBytes(TEN_MEGABYTES)
                                             .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                                                 @Override
                                                 public void onSuccess(byte[] bytes) {

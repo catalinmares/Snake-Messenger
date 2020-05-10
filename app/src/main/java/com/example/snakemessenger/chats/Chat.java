@@ -1,20 +1,22 @@
 package com.example.snakemessenger.chats;
 
+import java.util.List;
+
 public class Chat {
-    private String userID;
+    private List<String> users;
 
     public Chat() {
     }
 
-    public Chat(String userID) {
-        this.userID = userID;
+    public Chat(List<String> users) {
+        this.users = users;
     }
 
-    public String getUserID() {
-        return userID;
+    public List<String> getUsers() {
+        return users;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
+    public void setUsers(List<String> users) {
+        this.users = users;
     }
 }

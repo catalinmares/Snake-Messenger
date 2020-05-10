@@ -21,14 +21,17 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -77,9 +80,12 @@ public class ChatsFragment extends Fragment {
                 new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
         mChatsRecyclerView.setLayoutManager(layoutManager);
 
-        Query query = db.collection("users")
-                .document(currentUser.getUid())
-                .collection("chats");
+//        Query query = db.collection("users")
+//                .document(currentUser.getUid())
+//                .collection("chats");
+
+        Query query = db.collection("conversations")
+                .whereArrayContains("users", currentUser.getUid());
 
         query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
@@ -99,8 +105,10 @@ public class ChatsFragment extends Fragment {
             @Override
             public void onClick(View view, int position) {
                 Chat currentChat = chats.get(position);
+                List<String> users = currentChat.getUsers();
+                users.remove(currentUser.getUid());
 
-                sendUserToPrivateChat(currentChat.getUserID());
+                sendUserToPrivateChat(users.get(0));
             }
 
             @Override

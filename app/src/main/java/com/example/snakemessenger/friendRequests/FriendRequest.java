@@ -1,52 +1,42 @@
 package com.example.snakemessenger.friendRequests;
 
-import java.sql.Timestamp;
+import com.google.firebase.Timestamp;
 
 class FriendRequest {
-    private String userID;
-    private String time;
-    private String date;
-    private String status;
+    private String sender;
+    private String receiver;
+    private Timestamp timestamp;
 
     public FriendRequest() {
     }
 
-    public FriendRequest(String userID, String time, String date, String status) {
-        this.userID = userID;
-        this.time = time;
-        this.date = date;
-        this.status = status;
+    public FriendRequest(String sender, String receiver, Timestamp timestamp) {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.timestamp = timestamp;
     }
 
-    public String getUserID() {
-        return userID;
+    public String getSender() {
+        return sender;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
+    public void setSender(String sender) {
+        this.sender = sender;
     }
 
-    public String getDate() {
-        return date;
+    public String getReceiver() {
+        return receiver;
     }
 
-    public void setDate(String date) {
-        this.date = date;
+    public void setReceiver(String receiver) {
+        this.receiver = receiver;
     }
 
-    public String getTime() {
-        return time;
+    public Timestamp getTimestamp() {
+        return timestamp;
     }
 
-    public void setTime(String time) {
-        this.time = time;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
+    public void setTimestamp(Timestamp timestamp) {
+        this.timestamp = timestamp;
     }
 }

@@ -32,8 +32,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,21 +79,23 @@ public class PrivateChatActivity extends AppCompatActivity {
                 if (!TextUtils.isEmpty(message)) {
                     db.collection("users")
                             .document(currentUserID)
-                            .collection("friends")
-                            .document(friendID)
                             .get()
                             .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                                 @Override
                                 public void onSuccess(DocumentSnapshot documentSnapshot) {
                                     if (documentSnapshot.exists()) {
-                                        saveMessageInfoToDatabase(message);
-                                        mUserMessageInput.setText("");
-                                    } else {
-                                        Toast.makeText(
-                                                PrivateChatActivity.this,
-                                                "You are no longer friends. Please make friends again before chatting",
-                                                Toast.LENGTH_LONG
-                                        ).show();
+                                        List<String> friends = (List<String>) documentSnapshot.get("friends");
+
+                                        if (friends.contains(friendID)) {
+                                            saveMessageInfoToDatabase(message);
+                                            mUserMessageInput.setText("");
+                                        } else {
+                                            Toast.makeText(
+                                                    PrivateChatActivity.this,
+                                                    "You are no longer friends. Please make friends again before chatting",
+                                                    Toast.LENGTH_LONG
+                                            ).show();
+                                        }
                                     }
                                 }
                             });
@@ -128,15 +129,15 @@ public class PrivateChatActivity extends AppCompatActivity {
                                 mFriendName.setText(user.getName());
                                 mFriendStatus.setText(user.getStatus());
 
-                                if (user.getPicture().equals("yes")) {
-                                    final long ONE_MEGABYTE = 1024 * 1024;
+                                if (user.getPicture()) {
+                                    final long TEN_MEGABYTES = 10 * 1024 * 1024;
 
                                     if (MainActivity.profilePictures.containsKey(user.getUserID())) {
                                         mFriendProfilePic.setImageBitmap(MainActivity.profilePictures.get(user.getUserID()));
                                     } else {
 
                                         storageReference.child(user.getUserID() + "-profile_pic")
-                                                .getBytes(ONE_MEGABYTE)
+                                                .getBytes(TEN_MEGABYTES)
                                                 .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                                                     @Override
                                                     public void onSuccess(byte[] bytes) {
@@ -188,7 +189,7 @@ public class PrivateChatActivity extends AppCompatActivity {
         String chatID = friendID.compareTo(currentUserID) > 0 ?
                 friendID.concat(currentUserID) :
                 currentUserID.concat(friendID);
-        Query query = db.collection("chats")
+        Query query = db.collection("conversations")
                 .document(chatID)
                 .collection("messages")
                 .orderBy("timestamp");
@@ -213,73 +214,36 @@ public class PrivateChatActivity extends AppCompatActivity {
     }
 
     private void saveMessageInfoToDatabase(String message) {
-        Calendar calForDate = Calendar.getInstance();
-        SimpleDateFormat currentDateFormat = new SimpleDateFormat("dd/MM/yy");
-        String currentDate = currentDateFormat.format(calForDate.getTime());
-
-        Calendar calForTime = Calendar.getInstance();
-        SimpleDateFormat currentTimeFormat = new SimpleDateFormat("HH:mm");
-        String currentTime = currentTimeFormat.format(calForTime.getTime());
-
         Map<String, Object> messageData = new HashMap<String, Object>();
-        messageData.put("senderID", currentUserID);
-        messageData.put("date", currentDate);
-        messageData.put("time", currentTime);
+        messageData.put("sender", currentUserID);
         messageData.put("content", message);
         messageData.put("timestamp", Timestamp.now());
 
-
-        String chatID = friendID.compareTo(currentUserID) > 0 ?
+        final String chatID = friendID.compareTo(currentUserID) > 0 ?
                 friendID.concat(currentUserID) :
                 currentUserID.concat(friendID);
 
-        db.collection("chats")
+        db.collection("conversations")
                 .document(chatID)
-                .collection("messages")
-                .document()
-                .set(messageData);
-
-        db.collection("users")
-                .document(currentUserID)
-                .collection("chats")
-                .document(friendID)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         if (!documentSnapshot.exists()) {
                             Map<String, Object> userChat = new HashMap<>();
-                            userChat.put("userID", friendID);
+                            userChat.put("users", Arrays.asList(currentUserID, friendID));
 
-                            db.collection("users")
-                                    .document(currentUserID)
-                                    .collection("chats")
-                                    .document(friendID)
+                            db.collection("conversations")
+                                    .document(chatID)
                                     .set(userChat);
                         }
                     }
                 });
 
-        db.collection("users")
-                .document(friendID)
-                .collection("chats")
-                .document(currentUserID)
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        if (!documentSnapshot.exists()) {
-                            Map<String, Object> friendChat = new HashMap<>();
-                            friendChat.put("userID", currentUserID);
-
-                            db.collection("users")
-                                    .document(friendID)
-                                    .collection("chats")
-                                    .document(currentUserID)
-                                    .set(friendChat);
-                        }
-                    }
-                });
-
+        db.collection("conversations")
+                .document(chatID)
+                .collection("messages")
+                .document()
+                .set(messageData);
     }
 }

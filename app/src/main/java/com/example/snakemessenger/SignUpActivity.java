@@ -211,6 +211,7 @@ public class SignUpActivity extends AppCompatActivity {
                             Map<String, Object> userData = new HashMap<String, Object>();
                             userData.put("userID", userID);
                             userData.put("name", name);
+                            userData.put("picture", customProfilePic);
 
                             if (customProfilePic) {
                                 profilePic.setDrawingCacheEnabled(true);
@@ -230,13 +231,12 @@ public class SignUpActivity extends AppCompatActivity {
                                     }
                                 });
 
-                                userData.put("picture", "yes");
-                            } else {
-                                userData.put("picture", "no");
+
                             }
 
                             userData.put("email", email);
                             userData.put("status", "Available");
+                            userData.put("friends", new ArrayList<String>());
 
                             mProgressDialog.dismiss();
 

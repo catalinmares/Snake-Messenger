@@ -113,15 +113,14 @@ public class SettingsActivity extends AppCompatActivity {
                             Log.d(MainActivity.TAG, "DocumentSnapshot data: " + documentSnapshot.getData());
 
                             String userName = documentSnapshot.getString("name");
-                            String profilePic = documentSnapshot.getString("picture");
+                            boolean profilePic = documentSnapshot.getBoolean("picture");
                             String userStatus = documentSnapshot.getString("status");
 
-                            assert profilePic != null;
-                            if (profilePic.equals("yes")) {
-                                final long ONE_MEGABYTE = 1024 * 1024;
+                            if (profilePic) {
+                                final long TEN_MEGABYTES = 10 * 1024 * 1024;
 
                                 storageReference.child(currentUser.getUid() + "-profile_pic")
-                                        .getBytes(ONE_MEGABYTE)
+                                        .getBytes(TEN_MEGABYTES)
                                         .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                                             @Override
                                             public void onSuccess(byte[] bytes) {

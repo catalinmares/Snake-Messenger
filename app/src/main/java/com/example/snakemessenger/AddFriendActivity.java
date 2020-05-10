@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -21,20 +20,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +52,6 @@ public class AddFriendActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private FirebaseFirestore db;
-    private StorageReference storageReference;
 
     private Dialog userProfile;
 
@@ -76,7 +69,6 @@ public class AddFriendActivity extends AppCompatActivity {
         currentUserID = currentUser.getUid();
 
         db = FirebaseFirestore.getInstance();
-        storageReference = FirebaseStorage.getInstance().getReference();
 
         mSearchName = mToolbar.findViewById(R.id.friend_search_name);
         mSearch = mToolbar.findViewById(R.id.friend_search_btn);
@@ -173,46 +165,53 @@ public class AddFriendActivity extends AppCompatActivity {
 
         db.collection("users")
                 .document(currentUserID)
-                .collection("friends")
-                .document(userID)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         if (documentSnapshot.exists()) {
-                            initializeUserFriendsFields(userID);
-                        } else {
-                            db.collection("users")
-                                    .document(userID)
-                                    .collection("friend requests")
-                                    .document(currentUserID)
-                                    .get()
-                                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                        @Override
-                                        public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                            if (documentSnapshot.exists() &&
-                                                    documentSnapshot.getString("status").equals("pending")) {
-                                                initializeUserFriendRequestSent(userID);
-                                            } else {
-                                                db.collection("users")
-                                                        .document(currentUserID)
-                                                        .collection("friend requests")
-                                                        .document(userID)
-                                                        .get()
-                                                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                                            @Override
-                                                            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                                if (documentSnapshot.exists() &&
-                                                                        documentSnapshot.getString("status").equals("pending")) {
-                                                                    initializeUserFriendRequestReceived(userID);
-                                                                } else {
-                                                                    initializeUserNotFriendsFields(userID);
-                                                                }
-                                                            }
-                                                        });
+                            Map<String, Object> userData = documentSnapshot.getData();
+                            List<String> friends = (List<String>) userData.get("friends");
+
+                            if (friends.contains(userID)) {
+                                initializeUserFriendsFields(userID);
+                            } else {
+                                db.collection("requests")
+                                        .whereEqualTo("sender", currentUserID)
+                                        .whereEqualTo("receiver", userID)
+                                        .get()
+                                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                if (task.isSuccessful()) {
+                                                    List<DocumentSnapshot> docs = task.getResult().getDocuments();
+
+                                                    if (!docs.isEmpty()) {
+                                                        initializeUserFriendRequestSent(userID);
+                                                    } else {
+                                                        db.collection("requests")
+                                                                .whereEqualTo("sender", userID)
+                                                                .whereEqualTo("receiver", currentUserID)
+                                                                .get()
+                                                                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                                    @Override
+                                                                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                                        if (task.isSuccessful()) {
+                                                                            List<DocumentSnapshot> docs = task.getResult().getDocuments();
+
+                                                                            if (!docs.isEmpty()) {
+                                                                                initializeUserFriendRequestReceived(userID);
+                                                                            } else {
+                                                                                initializeUserNotFriendsFields(userID);
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                });
+                                                    }
+                                                }
                                             }
-                                        }
-                                    });
+                                        });
+                            }
                         }
                     }
                 });

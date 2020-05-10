@@ -2,22 +2,32 @@ package com.example.snakemessenger.groups;
 import java.util.List;
 
 class Group {
+    private String groupID;
     private String name;
     private String adminID;
     private String description;
-    private String picture;
+    private boolean picture;
     private List<String> users;
 
     public Group() {
 
     }
 
-    public Group(String name, String adminID, String description, String picture, List<String> users) {
+    public Group(String groupID, String name, String adminID, String description, boolean picture, List<String> users) {
+        this.groupID = groupID;
         this.name = name;
         this.adminID = adminID;
         this.description = description;
         this.picture = picture;
         this.users = users;
+    }
+
+    public String getGroupID() {
+        return groupID;
+    }
+
+    public void setGroupID(String groupID) {
+        this.groupID = groupID;
     }
 
     public String getName() {
@@ -44,11 +54,11 @@ class Group {
         this.description = description;
     }
 
-    public String getPicture() {
+    public boolean isPicture() {
         return picture;
     }
 
-    public void setPicture(String picture) {
+    public void setPicture(boolean picture) {
         this.picture = picture;
     }
 

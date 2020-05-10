@@ -6,13 +6,13 @@ public class User {
     private String userID;
     private String name;
     private String email;
-    private String picture;
+    private boolean picture;
     private String status;
 
     public User() {
     }
 
-    public User(String userID, String name, String email, String picture, String status) {
+    public User(String userID, String name, String email, boolean picture, String status) {
         this.userID = userID;
         this.name = name;
         this.email = email;
@@ -44,11 +44,11 @@ public class User {
         this.email = email;
     }
 
-    public String getPicture() {
+    public boolean getPicture() {
         return picture;
     }
 
-    public void setPicture(String picture) {
+    public void setPicture(boolean picture) {
         this.picture = picture;
     }
 

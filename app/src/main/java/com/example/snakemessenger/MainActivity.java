@@ -11,12 +11,9 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
 import android.view.Menu;
@@ -28,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG = "SnakeMessenger";
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
-    private StorageReference storageReference;
 
     private ViewPager mViewPager;
     private TabLayout mTabLayout;
@@ -47,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        storageReference = FirebaseStorage.getInstance().getReference();
 
         currentUser = mAuth.getCurrentUser();
 
@@ -74,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         super.onOptionsItemSelected(item);
-        Toast.makeText(MainActivity.this, "Ceva", Toast.LENGTH_SHORT).show();
 
         if (item.getItemId() == R.id.main_settings_option) {
             sendUserToSettingsActivity();

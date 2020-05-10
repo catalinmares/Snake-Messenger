@@ -14,6 +14,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 public class ChatAdapter extends RecyclerView.Adapter<GroupChatViewHolder> {
@@ -41,10 +43,10 @@ public class ChatAdapter extends RecyclerView.Adapter<GroupChatViewHolder> {
     public void onBindViewHolder(@NonNull final GroupChatViewHolder holder, int position) {
         Message currentMessage = mMessages.get(position);
 
-        final String senderID = currentMessage.getSenderID();
+        final String senderID = currentMessage.getSender();
         String messageContent = currentMessage.getContent();
-        String date = currentMessage.getDate();
-        String time = currentMessage.getTime();
+        Date date = currentMessage.getTimestamp().toDate();
+        SimpleDateFormat ft = new SimpleDateFormat("dd.MM.yy ',' HH:mm");
 
         db.collection("users")
                 .document(senderID)
@@ -54,16 +56,15 @@ public class ChatAdapter extends RecyclerView.Adapter<GroupChatViewHolder> {
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         if (documentSnapshot.exists()) {
                             holder.getmSenderName().setText(documentSnapshot.getString("name"));
-                            String hasPhoto = documentSnapshot.getString("picture");
+                            boolean hasPhoto = documentSnapshot.getBoolean("picture");
 
-                            assert hasPhoto != null;
-                            if (hasPhoto.equals("yes")) {
-                                final long ONE_MEGABYTE = 1024 * 1024;
+                            if (hasPhoto) {
+                                final long TEN_MEGABYTES = 10 * 1024 * 1024;
                                 if (MainActivity.profilePictures.containsKey(senderID)) {
                                     holder.getmSenderProfilePicture().setImageBitmap(MainActivity.profilePictures.get(senderID));
                                 } else {
                                     storageReference.child(senderID + "-profile_pic")
-                                            .getBytes(ONE_MEGABYTE)
+                                            .getBytes(TEN_MEGABYTES)
                                             .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                                                 @Override
                                                 public void onSuccess(byte[] bytes) {
@@ -79,7 +80,7 @@ public class ChatAdapter extends RecyclerView.Adapter<GroupChatViewHolder> {
                 });
 
         holder.getmMessageContent().setText(messageContent);
-        holder.getmTimestamp().setText(String.format("%s, %s", date, time));
+        holder.getmTimestamp().setText(ft.format(date));
     }
 
     @Override

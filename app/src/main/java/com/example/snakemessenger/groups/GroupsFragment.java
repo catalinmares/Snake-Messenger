@@ -100,16 +100,19 @@ public class GroupsFragment extends Fragment {
 
     private void requestNewGroup() {
         Intent createGroupIntent = new Intent(getActivity(), CreateGroupActivity.class);
+        createGroupIntent.putExtra("new", true);
         startActivity(createGroupIntent);
     }
 
     private void sendUserToGroupConversation(Group group) {
+        String groupID = group.getGroupID();
         String groupName = group.getName();
         String adminID = group.getAdminID();
         String groupDescription = group.getDescription();
-        String groupPic = group.getPicture();
+        boolean groupPic = group.isPicture();
 
         Intent groupChatIntent = new Intent(getActivity(), GroupChatActivity.class);
+        groupChatIntent.putExtra("groupID", groupID);
         groupChatIntent.putExtra("name", groupName);
         groupChatIntent.putExtra("adminID", adminID);
         groupChatIntent.putExtra("description", groupDescription);

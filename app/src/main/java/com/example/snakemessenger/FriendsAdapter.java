@@ -22,11 +22,11 @@ import java.util.List;
 
 class FriendsAdapter extends RecyclerView.Adapter<UsersViewHolder> {
     private Context mContext;
-    private List<Friend> mFriends;
+    private List<String> mFriends;
     private FirebaseFirestore db;
     private StorageReference storageReference;
 
-    public FriendsAdapter(Context context, List<Friend> friends) {
+    public FriendsAdapter(Context context, List<String> friends) {
         this.mContext = context;
         this.mFriends = friends;
     }
@@ -45,10 +45,10 @@ class FriendsAdapter extends RecyclerView.Adapter<UsersViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull final UsersViewHolder holder, int position) {
-        final Friend currentFriend = mFriends.get(position);
+        final String currentFriendID = mFriends.get(position);
 
         db.collection("users")
-                .document(currentFriend.getUserID())
+                .document(currentFriendID)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
@@ -59,11 +59,11 @@ class FriendsAdapter extends RecyclerView.Adapter<UsersViewHolder> {
                             holder.getmContactName().setText(currentUser.getName());
                             holder.getmContactStatus().setText(currentUser.getStatus());
 
-                            if (currentUser.getPicture().equals("yes")) {
-                                final long ONE_MEGABYTE = 1024 * 1024;
+                            if (currentUser.getPicture()) {
+                                final long TEN_MEGABYTES = 10 * 1024 * 1024;
 
                                 storageReference.child(currentUser.getUserID() + "-profile_pic")
-                                        .getBytes(ONE_MEGABYTE)
+                                        .getBytes(TEN_MEGABYTES)
                                         .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                                             @Override
                                             public void onSuccess(byte[] bytes) {

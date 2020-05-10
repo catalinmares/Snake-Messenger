@@ -72,12 +72,24 @@
             android:hint="Description (optional)"
             android:textSize="22sp"/>
 
+        <Button
+            android:id="@+id/delete_group_btn"
+            android:layout_width="125dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/create_group_description_edit"
+            android:layout_marginTop="25dp"
+            android:text="Delete group"
+            android:textColor="#FFFFFF"
+            android:background="@color/colorAccent"/>
+
+
         <TextView
             android:id="@+id/create_group_members_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_below="@+id/create_group_description_edit"
+            android:layout_below="@+id/delete_group_btn"
             android:layout_marginTop="20dp"
             android:text="Members"
             android:textColor="@color/colorAccent"
@@ -98,7 +110,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/create_group_members_recycler_view"
             android:layout_width="wrap_content"
-            android:layout_height="150dp"
+            android:layout_height="300dp"
             android:layout_centerHorizontal="true"
             android:layout_below="@+id/create_group_add_friend_btn"
             android:layout_marginTop="30dp"/>
@@ -113,7 +125,7 @@
             android:layout_marginBottom="50dp"
             android:layout_below="@id/create_group_members_recycler_view"
             android:layout_marginTop="50dp"
-            android:text="Create"
+            android:text="Submit"
             android:textColor="#FFFFFF"
             android:background="@color/colorAccent"/>
     </RelativeLayout>

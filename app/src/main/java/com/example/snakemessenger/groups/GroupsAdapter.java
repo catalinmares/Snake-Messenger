@@ -42,18 +42,19 @@ class GroupsAdapter extends RecyclerView.Adapter<GroupsViewHolder> {
     public void onBindViewHolder(@NonNull final GroupsViewHolder holder, int position) {
         Group currentGroup = mGroups.get(position);
 
+        String groupID = currentGroup.getGroupID();
         String groupName = currentGroup.getName();
         String groupAdmin = currentGroup.getAdminID();
         String groupDescription = currentGroup.getDescription();
-        String groupPicture = currentGroup.getPicture();
+        boolean groupPicture = currentGroup.isPicture();
 
         holder.getTextViewName().setText(groupName);
         holder.getTextViewDescription().setText(groupDescription);
 
-        if (groupPicture.equals("yes")) {
-            final long ONE_MEGABYTE = 1024 * 1024;
-            storageReference.child(groupName + "-" + groupAdmin + "-profile_pic")
-                    .getBytes(ONE_MEGABYTE)
+        if (groupPicture) {
+            final long TEN_MEGABYTES = 10 * 1024 * 1024;
+            storageReference.child(groupID + "-profile_pic")
+                    .getBytes(TEN_MEGABYTES)
                     .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         @Override
                         public void onSuccess(byte[] bytes) {

@@ -22,6 +22,10 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.example.snakemessenger.User;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 class FriendRequestsAdapter extends RecyclerView.Adapter<FriendRequestsViewHolder> {
@@ -51,31 +55,14 @@ class FriendRequestsAdapter extends RecyclerView.Adapter<FriendRequestsViewHolde
     public void onBindViewHolder(@NonNull final FriendRequestsViewHolder holder, int position) {
         final FriendRequest currentFriendRequest = friendRequests.get(position);
 
-        switch (currentFriendRequest.getStatus()) {
-            case "pending":
-                holder.getmFriendRequestStatus().setTextColor(Color.parseColor("#BBBB00"));
-                holder.getmFriendRequestStatus().setText("Request pending");
-                break;
-            case "accepted":
-                holder.getmFriendRequestStatus().setTextColor(Color.parseColor("#00BB00"));
-                holder.getmFriendRequestStatus().setText("Request accepted");
-                break;
-            case "deleted":
-                holder.getmFriendRequestStatus().setTextColor(Color.parseColor("#BB0000"));
-                holder.getmFriendRequestStatus().setText("Request deleted");
-                break;
-            default:
-                break;
-        }
-        holder.getmFriendRequestTimestamp().setText(
-                String.format(
-                        "%s, %s",
-                        currentFriendRequest.getDate(),
-                        currentFriendRequest.getTime()
-                )
-        );
+        holder.getmFriendRequestStatus().setTextColor(Color.parseColor("#BBBB00"));
+        holder.getmFriendRequestStatus().setText("Request pending");
 
-        String userID = currentFriendRequest.getUserID();
+        Date date = currentFriendRequest.getTimestamp().toDate();
+        SimpleDateFormat ft = new SimpleDateFormat("dd.MM.yy ',' HH:mm");
+        holder.getmFriendRequestTimestamp().setText(ft.format(date));
+
+        String userID = currentFriendRequest.getSender();
 
         db.collection("users")
                 .document(userID)
@@ -87,11 +74,11 @@ class FriendRequestsAdapter extends RecyclerView.Adapter<FriendRequestsViewHolde
 
                         holder.getmFriendRequestMessage().setText(user.getName());
 
-                        if (user.getPicture().equals("yes")) {
-                            final long ONE_MEGABYTE = 1024 * 1024;
+                        if (user.getPicture()) {
+                            final long TEN_MEGABYTES = 10 * 1024 * 1024;
 
                             storageReference.child(user.getUserID() + "-profile_pic")
-                                    .getBytes(ONE_MEGABYTE)
+                                    .getBytes(TEN_MEGABYTES)
                                     .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                                         @Override
                                         public void onSuccess(byte[] bytes) {
