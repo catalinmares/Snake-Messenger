@@ -73,8 +73,8 @@ public class FriendRequestsFragment extends Fragment {
         mFriendRequestsRecyclerView.setLayoutManager(layoutManager);
 
         Query query = db.collection("requests")
-                .whereEqualTo("receiver", currentUser.getUid())
-                .orderBy("timestamp", Query.Direction.DESCENDING);
+                .whereEqualTo("receiver", currentUser.getUid());
+
 
         query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override

@@ -186,7 +186,7 @@ public class PrivateChatActivity extends AppCompatActivity {
                 new LinearLayoutManager(PrivateChatActivity.this, LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(layoutManager);
 
-        String chatID = friendID.compareTo(currentUserID) > 0 ?
+        String chatID = friendID.compareTo(currentUserID) < 0 ?
                 friendID.concat(currentUserID) :
                 currentUserID.concat(friendID);
         Query query = db.collection("conversations")
@@ -219,7 +219,7 @@ public class PrivateChatActivity extends AppCompatActivity {
         messageData.put("content", message);
         messageData.put("timestamp", Timestamp.now());
 
-        final String chatID = friendID.compareTo(currentUserID) > 0 ?
+        final String chatID = friendID.compareTo(currentUserID) < 0 ?
                 friendID.concat(currentUserID) :
                 currentUserID.concat(friendID);
 

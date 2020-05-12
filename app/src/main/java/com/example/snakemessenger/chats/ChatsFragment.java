@@ -80,10 +80,6 @@ public class ChatsFragment extends Fragment {
                 new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
         mChatsRecyclerView.setLayoutManager(layoutManager);
 
-//        Query query = db.collection("users")
-//                .document(currentUser.getUid())
-//                .collection("chats");
-
         Query query = db.collection("conversations")
                 .whereArrayContains("users", currentUser.getUid());
 
