@@ -20,7 +20,7 @@
     
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/group_chat_recycler_view"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/group_chat_appBarLayout"
         android:layout_above="@+id/group_chat_constraint_layout"/>

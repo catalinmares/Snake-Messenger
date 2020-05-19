@@ -186,9 +186,16 @@ public class PrivateChatActivity extends AppCompatActivity {
                 new LinearLayoutManager(PrivateChatActivity.this, LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(layoutManager);
 
-        String chatID = friendID.compareTo(currentUserID) < 0 ?
+        String chatID = friendID.compareTo(currentUserID) > 0 ?
                 friendID.concat(currentUserID) :
                 currentUserID.concat(friendID);
+
+        Toast.makeText(
+                PrivateChatActivity.this,
+                "Fetching messages from chat with ID " + chatID,
+                Toast.LENGTH_SHORT
+        ).show();
+
         Query query = db.collection("conversations")
                 .document(chatID)
                 .collection("messages")
@@ -219,7 +226,7 @@ public class PrivateChatActivity extends AppCompatActivity {
         messageData.put("content", message);
         messageData.put("timestamp", Timestamp.now());
 
-        final String chatID = friendID.compareTo(currentUserID) < 0 ?
+        final String chatID = friendID.compareTo(currentUserID) > 0 ?
                 friendID.concat(currentUserID) :
                 currentUserID.concat(friendID);
 

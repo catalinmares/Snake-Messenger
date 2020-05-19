@@ -9,8 +9,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -245,7 +247,38 @@ public class CreateGroupActivity extends AppCompatActivity {
     }
 
     private void deleteGroup() {
+        final AlertDialog deleteGroupDialog = new AlertDialog.Builder(CreateGroupActivity.this)
+                .setTitle("Delete group")
+                .setMessage("Are you sure you want to delete this group? After deletion, all messages will be lost without any chance of recovery.")
+                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        db.collection("groups")
+                                .document(groupID)
+                                .delete();
+                        dialogInterface.dismiss();
 
+                        storageReference.child(groupID + "-profile_pic")
+                            .delete();
+
+                        Toast.makeText(
+                                CreateGroupActivity.this,
+                                "Group deleted",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        Intent goBackToChat = new Intent();
+                        setResult(Activity.RESULT_CANCELED, goBackToChat);
+                        finish();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .show();
     }
 
     private void initializeAddMembersDialog() {

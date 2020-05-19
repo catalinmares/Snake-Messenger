@@ -8,13 +8,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-class GroupChatViewHolder extends RecyclerView.ViewHolder {
+class ChatUserViewHolder extends RecyclerView.ViewHolder {
     private CircleImageView mSenderProfilePicture;
     private TextView mSenderName;
     private TextView mMessageContent;
     private TextView mTimestamp;
 
-    public GroupChatViewHolder(@NonNull View itemView) {
+    public ChatUserViewHolder(@NonNull View itemView) {
         super(itemView);
 
         mSenderProfilePicture = itemView.findViewById(R.id.sender_profile_pic);

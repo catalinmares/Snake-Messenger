@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -18,6 +19,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -55,7 +58,7 @@ class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull final ChatItemViewHolder holder, int position) {
         final Chat currentChat = mChats.get(position);
-        List<String> users = currentChat.getUsers();
+        final List<String> users = currentChat.getUsers();
         users.remove(currentUser.getUid());
 
         db.collection("users")
@@ -65,24 +68,78 @@ class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         if (documentSnapshot.exists()) {
-                            final User currentUser = documentSnapshot.toObject(User.class);
+                            final User user = documentSnapshot.toObject(User.class);
 
-                            holder.getmUserProfileName().setText(currentUser.getName());
-                            holder.getmUserStatus().setText(currentUser.getStatus());
+                            holder.getmUserProfileName().setText(user.getName());
 
-                            if (currentUser.getPicture()) {
+                            String chatID = users.get(0).compareTo(currentUser.getUid()) > 0 ?
+                                    users.get(0).concat(currentUser.getUid()) :
+                                    currentUser.getUid().concat(users.get(0));
+
+                            db.collection("conversations")
+                                    .document(chatID)
+                                    .collection("messages")
+                                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                                    .limit(1)
+                                    .get()
+                                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                        @Override
+                                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                            if (queryDocumentSnapshots.isEmpty()) {
+                                                holder.getmUserStatus().setText(user.getStatus());
+                                            } else {
+                                                List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
+                                                DocumentSnapshot doc = docs.get(0);
+
+                                                String senderID = doc.getString("sender");
+                                                String content = doc.getString("content");
+
+                                                if (senderID.equals(currentUser.getUid())) {
+                                                    if (content.length() > 30) {
+                                                        holder.getmUserStatus().setText(
+                                                                String.format(
+                                                                        "You: %s...",
+                                                                        content.substring(0, Math.min(30, content.length())))
+                                                        );
+                                                    } else {
+                                                        holder.getmUserStatus().setText(
+                                                                String.format(
+                                                                        "You: %s",
+                                                                        content.substring(0, Math.min(30, content.length())))
+                                                        );
+                                                    }
+                                                } else {
+                                                    if (content.length() > 30) {
+                                                        holder.getmUserStatus().setText(
+                                                                String.format(
+                                                                        "%s: %s...",
+                                                                        user.getName(), content.substring(0, Math.min(30, content.length())))
+                                                        );
+                                                    } else {
+                                                        holder.getmUserStatus().setText(
+                                                                String.format(
+                                                                        "%s: %s",
+                                                                        user.getName(), content.substring(0, Math.min(30, content.length())))
+                                                        );
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
+
+                            if (user.getPicture()) {
                                 final long TEN_MEGABYTES = 10 * 1024 * 1024;
-                                if (MainActivity.profilePictures.containsKey(currentUser.getUserID())) {
-                                    holder.getmUserProfilePic().setImageBitmap(MainActivity.profilePictures.get(currentUser.getUserID()));
+                                if (MainActivity.profilePictures.containsKey(user.getUserID())) {
+                                    holder.getmUserProfilePic().setImageBitmap(MainActivity.profilePictures.get(user.getUserID()));
                                 } else {
-                                    storageReference.child(currentUser.getUserID() + "-profile_pic")
+                                    storageReference.child(user.getUserID() + "-profile_pic")
                                             .getBytes(TEN_MEGABYTES)
                                             .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                                                 @Override
                                                 public void onSuccess(byte[] bytes) {
                                                     Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                                                     holder.getmUserProfilePic().setImageBitmap(bitmap);
-                                                    MainActivity.profilePictures.put(currentUser.getUserID(), bitmap);
+                                                    MainActivity.profilePictures.put(user.getUserID(), bitmap);
                                                 }
                                             });
                                 }

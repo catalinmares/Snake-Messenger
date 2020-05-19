@@ -2,11 +2,13 @@ package com.example.snakemessenger;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,6 +26,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
@@ -206,7 +209,56 @@ public class GroupChatActivity extends AppCompatActivity {
     }
 
     private void leaveGroup() {
+        AlertDialog leaveGroupAlert = new AlertDialog.Builder(GroupChatActivity.this)
+                .setTitle("Leave group")
+                .setMessage("Are you sure you want to leave this group?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dialogInterface, int i) {
+                        db.collection("groups")
+                                .document(groupID)
+                                .get()
+                                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                        List<String> members = (List<String>) documentSnapshot.get("users");
+                                        members.remove(currentUserID);
 
+                                        db.collection("groups")
+                                                .document(groupID)
+                                                .update("users", members);
+
+                                        Toast.makeText(
+                                                GroupChatActivity.this,
+                                                "You left the group " + groupName,
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+
+                                        dialogInterface.dismiss();
+                                        finish();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(
+                                                GroupChatActivity.this,
+                                                "There was an error processing the request",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+
+                                        dialogInterface.dismiss();
+                                    }
+                                });
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .show();
     }
 
     private void sendUserToEditGroupActivity() {
@@ -249,6 +301,8 @@ public class GroupChatActivity extends AppCompatActivity {
                             }
                         });
             }
+        } else if (requestCode == UPDATE_GROUP_SETTINGS && resultCode == RESULT_CANCELED) {
+            finish();
         }
     }
 }
