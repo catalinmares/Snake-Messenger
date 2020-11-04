@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
+    tools:context=".SettingsActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/set_profile_image"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/profile_image"
+            app:civ_border_width="5dp"
+            app:civ_border_color="@color/colorPrimaryDark"/>
+
+        <EditText
+            android:id="@+id/set_user_name"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:ems="10"
+            android:hint="Username"
+            android:textColorHint="@color/colorText"
+            android:textColor="@color/colorPrimaryDark"
+            android:inputType="textPersonName"
+            android:drawableStart="@drawable/ic_baseline_account_circle"
+            android:drawableTint="@color/colorPrimaryDark"
+            android:drawablePadding="12dp"
+            android:background="@drawable/custom_input"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_below="@id/set_profile_image"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="50dp"/>
+
+        <EditText
+            android:id="@+id/set_profile_status"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:ems="10"
+            android:hint="User status"
+            android:textColorHint="@color/colorText"
+            android:textColor="@color/colorPrimaryDark"
+            android:inputType="textMultiLine"
+            android:drawableStart="@drawable/ic_baseline_notes_24"
+            android:drawableTint="@color/colorPrimaryDark"
+            android:drawablePadding="12dp"
+            android:background="@drawable/custom_input"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_below="@id/set_user_name"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"/>
+
+        <Button
+            android:id="@+id/update_settings_button"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="75dp"
+            app:backgroundTint="@color/colorAccent"
+            android:background="@drawable/custom_button"
+            android:text="Update profile"
+            android:textSize="20sp"
+            android:textColor="@color/colorWhite"
+            android:textAllCaps="false"
+            android:layout_below="@+id/set_profile_status"
+            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
+
+</RelativeLayout>
