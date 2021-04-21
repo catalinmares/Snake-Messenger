@@ -1,8 +1,9 @@
 package com.example.snakemessenger;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,34 +19,39 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
+import com.example.snakemessenger.database.Contact;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class SettingsActivity extends AppCompatActivity {
+public class EditProfileActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_ACCESS_GALLERY = 2;
 
     private CircleImageView mProfilePicture;
-    private EditText mUsername, mStatus;
-    private Button mUpdateButton;
+    private EditText mUsername, mDescription;
 
     private SharedPreferences loginPreferences;
     private Uri imageUri = null;
 
+    private Contact contact = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings);
+        setContentView(R.layout.activity_edit_profile);
 
         loginPreferences = getApplicationContext().getSharedPreferences("LOGIN_DETAILS", MODE_PRIVATE);
 
+        String contactPhone = Objects.requireNonNull(getIntent().getExtras()).getString("phone", "");
+        contact = MainActivity.db.getContactDao().findByPhone(contactPhone);
+
         mProfilePicture = findViewById(R.id.set_profile_image);
         mUsername = findViewById(R.id.set_user_name);
-        mStatus = findViewById(R.id.set_profile_status);
-        mUpdateButton = findViewById(R.id.update_settings_button);
+        mDescription = findViewById(R.id.set_profile_status);
+        Button mUpdateButton = findViewById(R.id.update_settings_button);
 
         updateUI();
 
@@ -61,27 +67,62 @@ public class SettingsActivity extends AppCompatActivity {
             public void onClick(View view) {
                 boolean ok = true;
                 String userName = mUsername.getText().toString();
-                String userStatus = mStatus.getText().toString();
+                String userDescription = mDescription.getText().toString();
 
-                SharedPreferences.Editor editor = loginPreferences.edit();
+                if (contact == null) {
+                    SharedPreferences.Editor editor = loginPreferences.edit();
 
-                if (!TextUtils.isEmpty(userName)) {
-                    editor.putString("name", userName);
+                    if (!TextUtils.isEmpty(userName)) {
+                        editor.putString("name", userName);
+                    } else {
+                        mUsername.setError("Name cannot be empty");
+                        ok = false;
+                    }
+
+                    if (!TextUtils.isEmpty(userDescription)) {
+                        editor.putString("status", userDescription);
+                    }
+
+                    editor.putString("photoUri", imageUri.toString());
+
+                    if (ok) {
+                        Toast.makeText(
+                                EditProfileActivity.this,
+                                "Profile updated successfully",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        editor.apply();
+                        setResult(Activity.RESULT_OK);
+                        finish();
+                    }
                 } else {
-                    mUsername.setError("Name cannot be empty");
-                    ok = false;
-                }
+                    contact.setSaved(true);
 
-                if (!TextUtils.isEmpty(userStatus)) {
-                    editor.putString("status", userStatus);
-                }
+                    if (!TextUtils.isEmpty(userName)) {
+                        contact.setName(userName);
+                    } else {
+                        mUsername.setError("Name cannot be empty");
+                        ok = false;
+                    }
 
-                editor.putString("photoUri", imageUri.toString());
+                    if (!TextUtils.isEmpty(userDescription)) {
+                        contact.setDescription(userDescription);
+                    }
 
-                if (ok) {
-                    Toast.makeText(SettingsActivity.this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
-                    editor.apply();
-                    sendUserToMainActivity();
+                    contact.setPhotoUri(imageUri.toString());
+
+                    if (ok) {
+                        Toast.makeText(
+                                EditProfileActivity.this,
+                                "Profile updated successfully",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        MainActivity.db.getContactDao().updateContact(contact);
+                        setResult(Activity.RESULT_OK);
+                        finish();
+                    }
                 }
             }
         });
@@ -93,10 +134,14 @@ public class SettingsActivity extends AppCompatActivity {
 
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
+            assert extras != null;
+
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             mProfilePicture.setImageBitmap(imageBitmap);
 
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            assert imageBitmap != null;
+
             imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
             String path = MediaStore.Images.Media.insertImage(this.getContentResolver(), imageBitmap, "Title", null);
 
@@ -108,40 +153,48 @@ public class SettingsActivity extends AppCompatActivity {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
                 mProfilePicture.setImageBitmap(bitmap);
             } catch (IOException e) {
-                Toast.makeText(SettingsActivity.this, "Failed to load image from device.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(EditProfileActivity.this, "Failed to load image from device.", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_IMAGE_CAPTURE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 dispatchTakePictureIntent();
             } else {
-                Toast.makeText(SettingsActivity.this, "Permission denied...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(EditProfileActivity.this, "Permission denied...", Toast.LENGTH_SHORT).show();
             }
         } else if (requestCode == REQUEST_ACCESS_GALLERY) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 dispatchPickPictureIntent();
             } else {
-                Toast.makeText(SettingsActivity.this, "Permission denied...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(EditProfileActivity.this, "Permission denied...", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
     private void updateUI() {
-        String name = loginPreferences.getString("name", "");
+        String name;
+        String description;
+        String photoUri;
+
+        if (contact == null) {
+            name = loginPreferences.getString("name", "");
+            description = loginPreferences.getString("status", "");
+            photoUri = loginPreferences.getString("photoUri", "");
+        } else {
+            name = contact.getName();
+            description = contact.getDescription();
+            photoUri = contact.getPhotoUri();
+        }
+
         mUsername.setText(name);
-
-        String status = loginPreferences.getString("status", "");
-        mStatus.setText(status);
-
-        String photoUri = loginPreferences.getString("photoUri", null);
+        mDescription.setText(description);
 
         if (photoUri != null) {
             imageUri = Uri.parse(photoUri);
@@ -150,7 +203,7 @@ public class SettingsActivity extends AppCompatActivity {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
                 mProfilePicture.setImageBitmap(bitmap);
             } catch (IOException e) {
-                Toast.makeText(SettingsActivity.this, "Failed to load image from device.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(EditProfileActivity.this, "Failed to load image from device.", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
         }
@@ -213,12 +266,5 @@ public class SettingsActivity extends AppCompatActivity {
         if (pickPictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(pickPictureIntent, REQUEST_ACCESS_GALLERY);
         }
-    }
-
-    private void sendUserToMainActivity() {
-        Intent mainIntent = new Intent(SettingsActivity.this, MainActivity.class);
-        mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(mainIntent);
-        finish();
     }
 }

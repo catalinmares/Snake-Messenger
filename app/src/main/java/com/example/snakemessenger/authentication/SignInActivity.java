@@ -1,4 +1,4 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.authentication;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
@@ -10,6 +10,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.snakemessenger.MainActivity;
+import com.example.snakemessenger.R;
 
 public class SignInActivity extends AppCompatActivity {
     private EditText phone, password;

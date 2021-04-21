@@ -1,4 +1,4 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.database;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
@@ -22,6 +22,15 @@ public interface MessageDao {
 
     @Query("SELECT * FROM messages WHERE payloadId = :payloadId LIMIT 1")
     Message getMessageByPayloadId(long payloadId);
+
+    @Query("SELECT * FROM messages WHERE to_from = :contact ORDER BY timestamp DESC LIMIT 1")
+    Message getLastMessage(String contact);
+
+    @Query("SELECT * FROM messages ORDER BY timestamp DESC LIMIT 1")
+    LiveData<Message> getLiveMessage();
+
+    @Query("SELECT * FROM messages WHERE to_from = :contact ORDER BY timestamp DESC LIMIT 1")
+    LiveData<Message> getLastLiveMessage(String contact);
 
     @Query("DELETE FROM messages")
     void deleteAllMessages();

@@ -1,4 +1,4 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.database;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
@@ -11,17 +11,26 @@ import java.util.List;
 
 @Dao
 public interface ContactDao {
-    @Query("SELECT * FROM contacts")
+    @Query("SELECT * FROM contacts WHERE saved = 1")
     List<Contact> getContacts();
 
-    @Query("SELECT * FROM contacts")
+    @Query("SELECT * FROM contacts WHERE saved = 1")
     LiveData<List<Contact>> getAllContacts();
+
+    @Query("SELECT * FROM contacts WHERE nearby = 1")
+    List<Contact> getNearbyContacts();
+
+    @Query("SELECT * FROM contacts WHERE nearby = 1")
+    LiveData<List<Contact>> getLiveNearbyContacts();
 
     @Query("SELECT * FROM contacts WHERE chat = 1")
     List<Contact> getChatContacts();
 
     @Query("SELECT * FROM contacts WHERE chat = 1")
     LiveData<List<Contact>> getLiveChatContacts();
+
+    @Query("SELECT * FROM contacts WHERE name LIKE :name")
+    List<Contact> getMatchingContacts(String name);
 
     @Query("SELECT * FROM contacts WHERE phone LIKE :phone LIMIT 1")
     Contact findByPhone(String phone);
@@ -43,9 +52,6 @@ public interface ContactDao {
 
     @Update
     void updateContact(Contact contact);
-
-    @Query("UPDATE contacts SET connected = 0 WHERE connected = 1")
-    void disconnectContacts();
 
     @Delete
     void deleteContact(Contact contact);

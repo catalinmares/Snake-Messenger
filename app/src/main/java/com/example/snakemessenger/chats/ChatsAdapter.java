@@ -1,156 +1,94 @@
 package com.example.snakemessenger.chats;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.bumptech.glide.Glide;
+import com.example.snakemessenger.managers.DateManager;
 import com.example.snakemessenger.MainActivity;
+import com.example.snakemessenger.database.Contact;
 import com.example.snakemessenger.R;
-import com.example.snakemessenger.User;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-
+import com.example.snakemessenger.database.Message;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
-    private Context mContext;
-    private List<Chat> mChats;
+    private Context context;
+    private List<Contact> chats;
 
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-    private FirebaseFirestore db;
-    private StorageReference storageReference;
-
-    public ChatsAdapter(Context mContext, List<Chat> mChats) {
-        this.mContext = mContext;
-        this.mChats = mChats;
+    public ChatsAdapter(Context context, List<Contact> chats) {
+        this.context = context;
+        this.chats = chats;
     }
-
 
     @NonNull
     @Override
     public ChatItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(mContext)
-                .inflate(R.layout.chat_item, parent, false);
-
-        mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
-        db = FirebaseFirestore.getInstance();
-        storageReference = FirebaseStorage.getInstance().getReference();
+        View itemView = LayoutInflater.from(context)
+                .inflate(R.layout.contact_item, parent, false);
 
         return new ChatItemViewHolder(itemView);
     }
 
     @Override
     public void onBindViewHolder(@NonNull final ChatItemViewHolder holder, int position) {
-        final Chat currentChat = mChats.get(position);
-        final List<String> users = currentChat.getUsers();
-        users.remove(currentUser.getUid());
+        Contact currentChatContact = chats.get(position);
 
-        db.collection("users")
-                .document(users.get(0))
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        if (documentSnapshot.exists()) {
-                            final User user = documentSnapshot.toObject(User.class);
+        holder.getUserProfileName().setText(currentChatContact.getName());
 
-                            holder.getmUserProfileName().setText(user.getName());
+        if (currentChatContact.getPhotoUri() != null) {
+            Uri imageUri = Uri.parse(currentChatContact.getPhotoUri());
+            Glide.with(context).load(imageUri).into(holder.getUserProfilePic());
+        }
 
-                            String chatID = users.get(0).compareTo(currentUser.getUid()) > 0 ?
-                                    users.get(0).concat(currentUser.getUid()) :
-                                    currentUser.getUid().concat(users.get(0));
+        holder.getUserProfilePic().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-                            db.collection("conversations")
-                                    .document(chatID)
-                                    .collection("messages")
-                                    .orderBy("timestamp", Query.Direction.DESCENDING)
-                                    .limit(1)
-                                    .get()
-                                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                                        @Override
-                                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                                            if (queryDocumentSnapshots.isEmpty()) {
-                                                holder.getmUserStatus().setText(user.getStatus());
-                                            } else {
-                                                List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
-                                                DocumentSnapshot doc = docs.get(0);
+            }
+        });
 
-                                                String senderID = doc.getString("sender");
-                                                String content = doc.getString("content");
+        if (currentChatContact.isConnected()) {
+            holder.getUserStatus().setVisibility(View.VISIBLE);
+        } else {
+            holder.getUserStatus().setVisibility(View.GONE);
+        }
 
-                                                if (senderID.equals(currentUser.getUid())) {
-                                                    if (content.length() > 30) {
-                                                        holder.getmUserStatus().setText(
-                                                                String.format(
-                                                                        "You: %s...",
-                                                                        content.substring(0, Math.min(30, content.length())))
-                                                        );
-                                                    } else {
-                                                        holder.getmUserStatus().setText(
-                                                                String.format(
-                                                                        "You: %s",
-                                                                        content.substring(0, Math.min(30, content.length())))
-                                                        );
-                                                    }
-                                                } else {
-                                                    if (content.length() > 30) {
-                                                        holder.getmUserStatus().setText(
-                                                                String.format(
-                                                                        "%s: %s...",
-                                                                        user.getName(), content.substring(0, Math.min(30, content.length())))
-                                                        );
-                                                    } else {
-                                                        holder.getmUserStatus().setText(
-                                                                String.format(
-                                                                        "%s: %s",
-                                                                        user.getName(), content.substring(0, Math.min(30, content.length())))
-                                                        );
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    });
+        Message lastMessage = MainActivity.db.getMessageDao().getLastMessage(currentChatContact.getPhone());
+        String messageContent = lastMessage.getContent();
 
-                            if (user.getPicture()) {
-                                final long TEN_MEGABYTES = 10 * 1024 * 1024;
-                                if (MainActivity.profilePictures.containsKey(user.getUserID())) {
-                                    holder.getmUserProfilePic().setImageBitmap(MainActivity.profilePictures.get(user.getUserID()));
-                                } else {
-                                    storageReference.child(user.getUserID() + "-profile_pic")
-                                            .getBytes(TEN_MEGABYTES)
-                                            .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                                                @Override
-                                                public void onSuccess(byte[] bytes) {
-                                                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                                                    holder.getmUserProfilePic().setImageBitmap(bitmap);
-                                                    MainActivity.profilePictures.put(user.getUserID(), bitmap);
-                                                }
-                                            });
-                                }
-                            }
-                        }
-                    }
-                });
+        if (lastMessage.getStatus() == Message.RECEIVED) {
+            holder.getLastMessage().setText(messageContent);
+        } else {
+            holder.getLastMessage().setText(String.format("You: %s", messageContent));
+        }
+
+        Date date = lastMessage.getTimestamp();
+        SimpleDateFormat ft = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US);
+
+        Date currentDate = Calendar.getInstance().getTime();
+
+        holder.getTimestamp().setText(String.format("~ %s", DateManager.getLastMessageDate(ft.format(currentDate), ft.format(date))));
     }
 
     @Override
     public int getItemCount() {
-        return mChats.size();
+        return chats.size();
+    }
+
+    public void setChats(List<Contact> chats) {
+        this.chats = chats;
+        notifyDataSetChanged();
+    }
+
+    public List<Contact> getChats() {
+        return chats;
     }
 }

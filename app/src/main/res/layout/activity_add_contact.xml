@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".AddFriendActivity">
+    tools:context=".contacts.AddContactActivity"
+    android:background="@color/colorPrimaryDark">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -12,12 +13,10 @@
         android:id="@+id/appBarLayout"
         android:theme="@style/AppTheme.AppBarOverlay">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+        <include
+            android:id="@+id/basic_bar_layout"
+            layout="@layout/basic_bar_layout">
+        </include>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -29,12 +28,13 @@
 
     <TextView
         android:id="@+id/no_devices"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/appBarLayout"
         android:text="No nearby users found."
-        android:textSize="25sp"
+        android:textSize="24sp"
+        android:textColor="@color/colorText"
+        android:textAlignment="center"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="300dp"/>
+        android:layout_centerVertical="true"/>
 
 </RelativeLayout>

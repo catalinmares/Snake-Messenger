@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:title="Edit contact"
+        android:id="@+id/chat_edit_option"
+        app:showAsAction="never"/>
+
+    <item
+        android:title="Block contact"
+        android:id="@+id/chat_block_option"
+        app:showAsAction="never"/>
+
+    <item
+        android:title="Delete messages"
+        android:id="@+id/chat_delete_option"
+        app:showAsAction="never"/>
+</menu>

@@ -1,107 +1,132 @@
 package com.example.snakemessenger.chats;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
-
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.example.snakemessenger.PrivateChatActivity;
+import android.widget.TextView;
+import com.example.snakemessenger.database.Contact;
+import com.example.snakemessenger.MainActivity;
 import com.example.snakemessenger.R;
 import com.example.snakemessenger.RecyclerTouchListener;
 import com.example.snakemessenger.RecyclerViewClickListener;
+import com.example.snakemessenger.database.Message;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QuerySnapshot;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 
-
-/**
- * A simple {@link Fragment} subclass.
- */
 public class ChatsFragment extends Fragment {
-    private View mChatsFragmentView;
-    private RecyclerView mChatsRecyclerView;
-    private ChatsAdapter mAdapter;
-    private List<Chat> chats;
-    private FloatingActionButton mNewChat;
+    public static final String TAG = "ChatsFragment";
 
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-    private FirebaseFirestore db;
-    private HashMap<String, Bitmap> profilePictures = new HashMap<>();
+    private View chatsFragmentView;
+
+    private TextView noChats;
+
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private RecyclerView chatsRecyclerView;
+    private ChatsAdapter chatsAdapter;
 
     public ChatsFragment() {
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
+        chatsFragmentView = inflater.inflate(R.layout.fragment_chats, container, false);
 
-        mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
-        db = FirebaseFirestore.getInstance();
+        initializeViews();
+        initializeRecyclerView();
+
+        MainActivity.db.getContactDao().getLiveChatContacts().observe(getViewLifecycleOwner(), new Observer<List<Contact>>() {
+            @Override
+            public void onChanged(List<Contact> contacts) {
+                if (contacts.size() > 0) {
+                    noChats.setVisibility(View.GONE);
+                    chatsRecyclerView.setVisibility(View.VISIBLE);
+                } else {
+                    noChats.setVisibility(View.VISIBLE);
+                    chatsRecyclerView.setVisibility(View.GONE);
+                }
+
+                chatsAdapter.setChats(contacts);
+            }
+        });
+
+        MainActivity.db.getMessageDao().getLiveMessage().observe(getViewLifecycleOwner(), new Observer<Message>() {
+            @Override
+            public void onChanged(Message message) {
+                List<Contact> contacts = MainActivity.db.getContactDao().getChatContacts();
+
+                if (contacts.size() > 0) {
+                    noChats.setVisibility(View.GONE);
+                    chatsRecyclerView.setVisibility(View.VISIBLE);
+                } else {
+                    noChats.setVisibility(View.VISIBLE);
+                    chatsRecyclerView.setVisibility(View.GONE);
+                }
+
+                chatsAdapter.setChats(contacts);
+            }
+        });
+
+        return chatsFragmentView;
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, final ViewGroup container,
-                             Bundle savedInstanceState) {
-        mChatsFragmentView = inflater.inflate(R.layout.fragment_chats, container, false);
-        mNewChat = mChatsFragmentView.findViewById(R.id.new_chat_btn);
+    private void initializeViews() {
+        swipeRefreshLayout = chatsFragmentView.findViewById(R.id.refresh);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimaryDark);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                List<Contact> contacts = MainActivity.db.getContactDao().getChatContacts();
+
+                if (contacts.size() > 0) {
+                    noChats.setVisibility(View.GONE);
+                    chatsRecyclerView.setVisibility(View.VISIBLE);
+                } else {
+                    noChats.setVisibility(View.VISIBLE);
+                    chatsRecyclerView.setVisibility(View.GONE);
+                }
+
+                chatsAdapter.setChats(contacts);
+
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+        noChats = chatsFragmentView.findViewById(R.id.no_chats);
+        chatsAdapter = new ChatsAdapter(getContext(), new ArrayList<Contact>());
+
+        FloatingActionButton mNewChat = chatsFragmentView.findViewById(R.id.new_chat_btn);
         mNewChat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Start a new conversation", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                sendUserToSendMessageActivity();
             }
         });
+    }
 
-        mChatsRecyclerView = mChatsFragmentView.findViewById(R.id.chats_recycler_view);
+    private void initializeRecyclerView() {
+        chatsRecyclerView = chatsFragmentView.findViewById(R.id.chats_recycler_view);
 
         RecyclerView.LayoutManager layoutManager =
                 new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
-        mChatsRecyclerView.setLayoutManager(layoutManager);
+        chatsRecyclerView.setLayoutManager(layoutManager);
 
-        Query query = db.collection("conversations")
-                .whereArrayContains("users", currentUser.getUid());
-
-        query.addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                if (e != null) {
-                    return;
-                }
-
-                chats = queryDocumentSnapshots.toObjects(Chat.class);
-                mAdapter = new ChatsAdapter(getActivity(), chats);
-                mChatsRecyclerView.setAdapter(mAdapter);
-            }
-        });
-
-        mChatsRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getActivity(),
-                mChatsRecyclerView, new RecyclerViewClickListener() {
+        chatsRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getActivity(),
+                chatsRecyclerView, new RecyclerViewClickListener() {
             @Override
             public void onClick(View view, int position) {
-                Chat currentChat = chats.get(position);
-                List<String> users = currentChat.getUsers();
-                users.remove(currentUser.getUid());
-
-                sendUserToPrivateChat(users.get(0));
+                Contact currentChatContact = chatsAdapter.getChats().get(position);
+                sendUserToPrivateChat(currentChatContact);
             }
 
             @Override
@@ -110,12 +135,19 @@ public class ChatsFragment extends Fragment {
             }
         }));
 
-        return mChatsFragmentView;
+        chatsRecyclerView.setAdapter(chatsAdapter);
+
+        Log.d(TAG, "initializeRecyclerView: initialized RecyclerView");
     }
 
-    private void sendUserToPrivateChat(String userID) {
-        Intent privateChatIntent = new Intent(getActivity(), PrivateChatActivity.class);
-        privateChatIntent.putExtra("userID", userID);
+    private void sendUserToSendMessageActivity() {
+        Intent sendMessageIntent = new Intent(getActivity(), SendMessageActivity.class);
+        startActivity(sendMessageIntent);
+    }
+
+    private void sendUserToPrivateChat(Contact contact) {
+        Intent privateChatIntent = new Intent(getActivity(), ChatActivity.class);
+        privateChatIntent.putExtra("phone", contact.getPhone());
         startActivity(privateChatIntent);
     }
 }

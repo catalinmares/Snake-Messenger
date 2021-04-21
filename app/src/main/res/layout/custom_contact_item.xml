@@ -1,5 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="3dp"
+    app:cardElevation="3dp"
+    app:cardUseCompatPadding="true">
 
-</RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary"
+        android:padding="16dp"
+        android:contentInsetLeft="0dp"
+        android:contentInsetStart="0dp"
+        app:contentInsetLeft="0dp"
+        app:contentInsetStart="0dp"
+        android:contentInsetRight="0dp"
+        android:contentInsetEnd="0dp"
+        app:contentInsetRight="0dp"
+        app:contentInsetEnd="0dp">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/contact_image_item"
+            android:layout_gravity="start"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/profile_image"
+            app:civ_border_width="2dp"
+            app:civ_border_color="@color/colorPrimaryDark"/>
+
+        <ImageView
+            android:id="@+id/status"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/contact_online"
+            android:layout_alignBottom="@id/contact_image_item"
+            android:layout_alignEnd="@id/contact_image_item"/>
+
+        <TextView
+            android:id="@+id/contact_name_item"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:text="@string/contact_name"
+            android:textColor="@color/colorAccent"
+            android:layout_toEndOf="@+id/contact_image_item"
+            android:layout_marginStart="10dp"/>
+
+        <TextView
+            android:id="@+id/contact_status_item"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="Available now"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="@color/colorText"
+            android:layout_toEndOf="@+id/contact_image_item"
+            android:layout_below="@+id/contact_name_item"
+            android:layout_marginStart="10dp"/>
+
+        <CheckBox
+            android:id="@+id/checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="0dp"
+            android:buttonTint="@color/colorAccent"
+            android:layout_alignBaseline="@id/contact_name_item"/>
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>

@@ -22,4 +22,21 @@
     <string name="friends_fragment">Friends Fragment</string>
     <string name="contact_name">Contact Name</string>
     <string name="status">Status</string>
+    <string name="title_activity_test">TestActivity</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_2">Tab 2</string>
+    <string name="active_now">Active now</string>
+    <string name="send_message">Send message</string>
+    <string name="edit_contact">Edit contact</string>
+    <string name="accept_request">Accept request</string>
+    <string name="delete_request">Delete request</string>
+    <string name="delete_contact">Delete contact</string>
 </resources>

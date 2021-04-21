@@ -1,4 +1,4 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.database;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -34,12 +34,18 @@ public class Contact {
     @ColumnInfo(name = "chat")
     private boolean chat;
 
+    @ColumnInfo(name = "saved")
+    private boolean saved;
+
+    @ColumnInfo(name = "nearby")
+    private boolean nearby;
+
     @Ignore
     public Contact() {
     }
 
-    public Contact(int id, String name, String phone, String endpointID, boolean connected,
-                   String lastActive, String description, String photoUri, boolean chat) {
+    public Contact(int id, String name, String phone, String endpointID, boolean connected, String lastActive,
+                   String description, String photoUri, boolean chat, boolean saved, boolean nearby) {
         this.id = id;
         this.name = name;
         this.phone = phone;
@@ -49,6 +55,8 @@ public class Contact {
         this.description = description;
         this.photoUri = photoUri;
         this.chat = chat;
+        this.saved = saved;
+        this.nearby = nearby;
     }
 
     public int getId() {
@@ -121,5 +129,21 @@ public class Contact {
 
     public void setChat(boolean chat) {
         this.chat = chat;
+    }
+
+    public boolean isSaved() {
+        return saved;
+    }
+
+    public void setSaved(boolean saved) {
+        this.saved = saved;
+    }
+
+    public boolean isNearby() {
+        return nearby;
+    }
+
+    public void setNearby(boolean nearby) {
+        this.nearby = nearby;
     }
 }

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="350dp"
+    android:layout_height="wrap_content"
+    android:padding="5dp"
+    android:background="@color/colorPrimary"
+    android:layout_gravity="center">
+
+    <TextView
+        android:id="@+id/contact_profile_close"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:textColor="@color/colorWhite"
+        android:text="X"
+        android:textStyle="bold"
+        android:layout_gravity="end"
+        android:gravity="center"
+        android:background="@drawable/circle_background"
+        android:backgroundTint="@color/colorAccent"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/contact_profile_pic"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/profile_image"
+            android:layout_gravity="center"
+            android:layout_marginTop="15dp"
+            app:civ_border_width="5dp"
+            app:civ_border_color="@color/colorPrimaryDark"/>
+
+        <ImageView
+            android:id="@+id/contact_profile_status"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/contact_online"
+            android:layout_alignBottom="@id/contact_profile_pic"
+            android:layout_alignEnd="@id/contact_profile_pic"/>
+
+        <TextView
+            android:id="@+id/contact_profile_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_below="@id/contact_profile_pic"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:textStyle="bold"
+            android:textColor="@color/colorAccent"
+            android:textSize="30sp"/>
+
+        <TextView
+            android:id="@+id/contact_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/contact_profile_name"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/colorText"
+            android:textSize="20sp"
+            android:textStyle="italic"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/contact_profile_relative_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="25dp"
+        android:layout_marginBottom="25dp"
+        android:gravity="center"
+        android:layout_marginHorizontal="20dp">
+
+        <Button
+            android:id="@+id/left_btn"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+            app:backgroundTint="@color/colorAccent"
+            android:background="@drawable/custom_button"
+            android:textSize="20sp"
+            android:textColor="@color/colorWhite"
+            android:textAllCaps="false"/>
+
+        <Button
+            android:id="@+id/right_btn"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+            app:backgroundTint="@color/colorAccent"
+            android:background="@drawable/custom_button"
+            android:textSize="20sp"
+            android:textColor="@color/colorWhite"
+            android:textAllCaps="false"
+            android:layout_toEndOf="@id/left_btn"/>
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/delete_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="25dp"
+        app:backgroundTint="@color/colorAccent"
+        android:background="@drawable/custom_button"
+        android:textSize="20sp"
+        android:textColor="@color/colorWhite"
+        android:textAllCaps="false"/>
+</LinearLayout>

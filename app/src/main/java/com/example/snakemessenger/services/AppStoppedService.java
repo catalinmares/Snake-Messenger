@@ -1,21 +1,22 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.services;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-
 import androidx.annotation.Nullable;
-
+import com.example.snakemessenger.database.Contact;
+import com.example.snakemessenger.MainActivity;
 import com.google.android.gms.nearby.Nearby;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class AppStoppedService extends Service {
     public static final String TAG = "AppStoppedService";
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -36,21 +37,26 @@ public class AppStoppedService extends Service {
 
         Log.d(TAG, "onTaskRemoved: stopped all endpoints");
 
-        List<Contact> contacts = MainActivity.db.getContactDao().getContacts();
+        List<Contact> contacts = MainActivity.db.getContactDao().getNearbyContacts();
 
-        Log.d(TAG, "onTaskRemoved: iterating through " + contacts.size() + "contacts");
+        Log.d(TAG, "onTaskRemoved: iterating through " + contacts.size() + " contacts");
 
         for (Contact contact : contacts) {
             Log.d(TAG, "onTaskRemoved: parsing contact with name " + contact.getName() + " connected " + contact.isConnected());
 
             if (contact.isConnected()) {
-                Log.d(TAG, "onTaskRemoved: disconnected from device " + contact.getName());
                 contact.setConnected(false);
+
                 Date currentTime = Calendar.getInstance().getTime();
-                SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US);
                 contact.setLastActive(df.format(currentTime));
-                MainActivity.db.getContactDao().updateContact(contact);
             }
+
+            contact.setNearby(false);
+
+            MainActivity.db.getContactDao().updateContact(contact);
+
+            Log.d(TAG, "onTaskRemoved: disconnected from device " + contact.getName());
         }
 
         super.onTaskRemoved(rootIntent);
@@ -58,6 +64,7 @@ public class AppStoppedService extends Service {
 
     public void stopAdvertising() {
         Nearby.getConnectionsClient(getApplicationContext()).stopAdvertising();
+
         Log.d(TAG, "stopAdvertising: stopped advertising");
     }
 

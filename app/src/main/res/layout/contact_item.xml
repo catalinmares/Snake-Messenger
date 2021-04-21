@@ -3,45 +3,70 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:emojicon="http://schemas.android.com/tools"
     app:cardCornerRadius="3dp"
     app:cardElevation="3dp"
     app:cardUseCompatPadding="true">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary"
         android:padding="16dp">
 
         <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/contact_image_item"
             android:layout_gravity="start"
-            android:id="@+id/friend_image_item"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:src="@drawable/profile_image"/>
+            android:src="@drawable/profile_image"
+            app:civ_border_width="2dp"
+            app:civ_border_color="@color/colorPrimaryDark"/>
+        
+        <ImageView
+            android:id="@+id/status"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/contact_online"
+            android:layout_alignBottom="@id/contact_image_item"
+            android:layout_alignEnd="@id/contact_image_item"/>
 
         <TextView
-            android:id="@+id/friend_name_item"
+            android:id="@+id/contact_name_item"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textStyle="bold"
             android:text="@string/contact_name"
             android:textColor="@color/colorAccent"
-            android:layout_toEndOf="@+id/friend_image_item"
+            android:layout_toEndOf="@+id/contact_image_item"
             android:layout_marginStart="10dp"/>
 
         <TextView
-            android:id="@+id/friend_status_item"
+            android:id="@+id/timestamp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:text="@string/status"
-            android:layout_toEndOf="@+id/friend_image_item"
-            android:layout_below="@+id/friend_name_item"
+            android:textSize="18sp"
+            android:text="Timestamp"
+            android:textColor="@color/colorText"
+            android:layout_below="@id/contact_name_item"
+            android:layout_alignParentEnd="true"
             android:layout_marginStart="10dp"/>
-    </RelativeLayout>
 
+        <hani.momanii.supernova_emoji_library.Helper.EmojiconTextView
+            android:id="@+id/contact_status_item"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="Available now"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="@color/colorText"
+            android:layout_toEndOf="@+id/contact_image_item"
+            android:layout_toStartOf="@id/timestamp"
+            android:layout_below="@+id/contact_name_item"
+            android:layout_marginStart="10dp"
+            emojicon:emojiconSize="30sp"/>
+    </RelativeLayout>
 </androidx.cardview.widget.CardView>

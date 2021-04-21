@@ -1,6 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
+    tools:context=".authentication.SignUpActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/profile_pic"
+            android:layout_width="125dp"
+            android:layout_height="125dp"
+            android:layout_marginTop="25dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/profile_image"
+            app:civ_border_width="3dp"
+            app:civ_border_color="@color/colorPrimaryDark"/>
+
+        <EditText
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:ems="10"
+            android:hint="Name"
+            android:textColorHint="@color/colorText"
+            android:drawableStart="@drawable/ic_baseline_account_circle"
+            android:drawableTint="@color/colorPrimary"
+            android:drawablePadding="12dp"
+            android:inputType="textPersonName|textCapWords"
+            android:textColor="@color/colorPrimaryDark"
+            android:background="@drawable/custom_input"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_below="@id/profile_pic"
+            android:layout_marginTop="25dp"
+            android:layout_centerHorizontal="true"/>
+
+        <EditText
+            android:id="@+id/phone"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:ems="10"
+            android:hint="Phone number"
+            android:textColorHint="@color/colorText"
+            android:drawableStart="@drawable/ic_baseline_call_24"
+            android:drawableTint="@color/colorPrimary"
+            android:drawablePadding="12dp"
+            android:inputType="phone"
+            android:textColor="@color/colorPrimaryDark"
+            android:background="@drawable/custom_input"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_below="@id/name"
+            android:layout_marginTop="25dp"
+            android:layout_centerHorizontal="true"/>
+
+        <EditText
+            android:id="@+id/password"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:ems="10"
+            android:hint="Password"
+            android:textColorHint="@color/colorText"
+            android:drawableStart="@drawable/ic_baseline_lock_24"
+            android:drawableTint="@color/colorPrimary"
+            android:drawablePadding="12dp"
+            android:inputType="textPassword"
+            android:textColor="@color/colorPrimaryDark"
+            android:background="@drawable/custom_input"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_below="@id/phone"
+            android:layout_marginTop="25dp"
+            android:layout_centerHorizontal="true"/>
+
+        <EditText
+            android:id="@+id/password_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:ems="10"
+            android:hint="Confirm password"
+            android:textColorHint="@color/colorText"
+            android:drawableStart="@drawable/ic_baseline_lock_24"
+            android:drawableTint="@color/colorPrimary"
+            android:drawablePadding="12dp"
+            android:inputType="textPassword"
+            android:textColor="@color/colorPrimaryDark"
+            android:background="@drawable/custom_input"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_below="@id/password"
+            android:layout_marginTop="25dp"
+            android:layout_centerHorizontal="true"/>
+
+        <Button
+            android:id="@+id/signup_button"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="75dp"
+            app:backgroundTint="@color/colorAccent"
+            android:background="@drawable/custom_button"
+            android:text="Sign Up"
+            android:textSize="20sp"
+            android:textColor="@color/colorWhite"
+            android:textAllCaps="false"
+            android:layout_below="@+id/password_confirm"
+            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
+</ScrollView>

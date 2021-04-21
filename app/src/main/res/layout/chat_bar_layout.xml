@@ -1,22 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="?attr/actionBarSize"
     android:id="@+id/chat_bar"
-    android:background="@color/colorAccent"
-    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+    android:background="@color/colorPrimary"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+    android:contentInsetLeft="0dp"
+    android:contentInsetStart="0dp"
+    app:contentInsetLeft="0dp"
+    app:contentInsetStart="0dp"
+    android:contentInsetRight="0dp"
+    android:contentInsetEnd="0dp"
+    app:contentInsetRight="0dp"
+    app:contentInsetEnd="0dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <ImageView
+            android:id="@+id/back_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_baseline_arrow_back_24"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="5dp"/>
+
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/chat_image"
             android:layout_width="45dp"
             android:layout_height="45dp"
-            android:layout_marginStart="2dp"
-            android:src="@drawable/group_image"
-            android:layout_centerVertical="true"/>
+            android:layout_marginStart="5dp"
+            android:src="@drawable/profile_image"
+            app:civ_border_width="1dp"
+            app:civ_border_color="@color/colorPrimaryDark"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@id/back_btn"/>
+
+        <ImageView
+            android:id="@+id/status"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:src="@drawable/chat_contact_online"
+            android:layout_alignBottom="@id/chat_image"
+            android:layout_alignEnd="@id/chat_image"/>
 
         <TextView
             android:id="@+id/chat_name"
@@ -27,20 +55,16 @@
             android:text="Name"
             android:textStyle="bold"
             android:textSize="22sp"
-            android:textColor="#FFFFFF"/>
+            android:textColor="@color/colorAccent"/>
 
-        <HorizontalScrollView
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/chat_description"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text="Status"
+            android:textColor="@color/colorText"
             android:layout_toEndOf="@id/chat_image"
-            android:layout_below="@id/chat_name"
-            android:layout_marginStart="10dp">
-
-            <TextView
-                android:id="@+id/chat_description"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Group description"/>
-        </HorizontalScrollView>
+            android:layout_below="@id/chat_name"/>
     </RelativeLayout>
 </androidx.appcompat.widget.Toolbar>

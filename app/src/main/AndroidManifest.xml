@@ -2,44 +2,60 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.snakemessenger">
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
     <application
-        android:allowBackup="true"
+        android:name=".App"
+        android:allowBackup="false"
         android:icon="@mipmap/snake_logo"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/snake_logo_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".PrivateChatActivity" />
-        <activity android:name=".AddFriendActivity" />
-        <activity android:name=".CreateGroupActivity" />
-        <activity android:name=".GroupChatActivity" />
-        <activity android:name=".SettingsActivity" />
-        <activity
-            android:name=".SignInActivity"
-            android:parentActivityName=".MainActivity" />
-        <activity
-            android:name=".SignUpActivity"
-            android:parentActivityName=".SignInActivity" />
-        <activity
-            android:name=".MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+
+        <activity android:name=".chats.SendMessageActivity" />
+        <activity android:name=".LauncherActivity"
+            android:noHistory="false">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".services.AppStoppedService"
+            android:stopWithTask="false" />
+
+        <meta-data
+            android:name="com.google.android.nearby.messages.API_KEY"
+            android:value="API_KEY" />
+
+        <activity android:name=".chats.ChatActivity" />
+        <activity android:name=".contacts.AddContactActivity" />
+        <activity android:name=".EditProfileActivity" />
+        <activity android:name=".authentication.SignInActivity" />
+        <activity android:name=".authentication.SignUpActivity" />
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <receiver android:name=".notifications.NotificationReceiver"/>
     </application>
-
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="true" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
 </manifest>

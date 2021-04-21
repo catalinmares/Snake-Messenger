@@ -1,4 +1,4 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.authentication;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,6 +18,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.example.snakemessenger.R;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -155,6 +158,12 @@ public class SignUpActivity extends AppCompatActivity {
         }
 
         editor.apply();
+
+        Toast.makeText(
+                SignUpActivity.this,
+                "Account successfully created",
+                Toast.LENGTH_SHORT
+        ).show();
 
         Intent intent = new Intent(SignUpActivity.this, SignInActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);

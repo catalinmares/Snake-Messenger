@@ -4,174 +4,137 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    tools:context=".SignInActivity">
+    android:background="@color/colorPrimary"
+    tools:context=".authentication.SignInActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_gravity="center">
 
-        <Button
-            android:id="@+id/signup_button"
-            android:layout_width="320dp"
-            android:layout_height="50dp"
-            android:backgroundTint="@color/colorAccent"
-            android:text="Sign up now"
-            android:textColor="#FFFFFF"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView5" />
-
-        <Button
-            android:id="@+id/signin_button"
-            android:layout_width="320dp"
-            android:layout_height="50dp"
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/app_logo"
+            android:layout_width="125dp"
+            android:layout_height="125dp"
             android:layout_marginTop="25dp"
-            android:backgroundTint="@color/colorAccent"
-            android:text="@string/common_signin_button_text"
-            android:textColor="#FFFFFF"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/password" />
+            android:layout_centerHorizontal="true"
+            android:src="@mipmap/snake_logo"/>
+
+        <TextView
+            android:id="@+id/app_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="30dp"
+            android:text="Snake Messenger"
+            android:textColor="@color/colorWhite"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:layout_below="@id/app_logo"
+            android:layout_marginTop="15dp"
+            android:layout_centerHorizontal="true"/>
+
+        <EditText
+            android:id="@+id/phone"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:ems="10"
+            android:hint="Phone number"
+            android:textColorHint="@color/colorText"
+            android:drawableStart="@drawable/ic_baseline_call_24"
+            android:drawableTint="@color/colorPrimary"
+            android:drawablePadding="12dp"
+            android:inputType="phone"
+            android:textColor="@color/colorPrimaryDark"
+            android:background="@drawable/custom_input"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_below="@id/app_name"
+            android:layout_marginTop="50dp"
+            android:layout_centerHorizontal="true"/>
 
         <EditText
             android:id="@+id/password"
-            android:layout_width="318dp"
+            android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginTop="400dp"
+            android:layout_marginHorizontal="20dp"
             android:ems="10"
             android:hint="Password"
+            android:textColorHint="@color/colorText"
+            android:textColor="@color/colorPrimaryDark"
             android:inputType="textPassword"
-            android:drawableStart="@drawable/password"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.494"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <EditText
-            android:id="@+id/email"
-            android:layout_width="320dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="50dp"
-            android:layout_marginTop="300dp"
-            android:ems="10"
-            android:hint="E-mail address"
-            android:drawableStart="@drawable/email"
-            android:inputType="textEmailAddress"
-            app:layout_constraintEnd_toEndOf="@+id/password"
-            app:layout_constraintHorizontal_bias="0.833"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/textView3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="E-mail"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="@color/colorAccent"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/email"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:layout_marginBottom="30dp"
-            android:text="Sign In"
-            android:textColor="@color/colorAccent"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/imageView2"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/textView4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:text="Password"
-            android:textColor="@color/colorAccent"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/password"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/email"
-            app:layout_constraintVertical_bias="0.166" />
-
-        <TextView
-            android:id="@+id/textView5"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="650dp"
-            android:text="New to the app?"
-            android:textAllCaps="false"
-            android:textSize="18sp"
-            android:textStyle="italic"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/imageView2"
-            android:layout_width="140dp"
-            android:layout_height="111dp"
-            android:layout_marginBottom="30dp"
-            app:layout_constraintBottom_toTopOf="@+id/textView3"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintStart_toStartOf="parent"
-            app:srcCompat="@mipmap/snake_logo_round" />
+            android:drawableStart="@drawable/ic_baseline_lock_24"
+            android:drawableTint="@color/colorPrimary"
+            android:drawablePadding="12dp"
+            android:background="@drawable/custom_input"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_below="@id/phone"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"/>
 
         <TextView
             android:id="@+id/password_reset1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="10dp"
             android:text="Forgot your password?"
             android:textStyle="italic"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/signin_button" />
+            android:textColor="@color/colorText"
+            android:textSize="18sp"
+            android:layout_below="@id/password"
+            android:layout_centerHorizontal="true"/>
 
         <TextView
             android:id="@+id/password_reset2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Reset it now!"
+            android:layout_marginTop="10dp"
+            android:text="Reset it now"
+            android:textStyle="bold"
+            android:textColor="@color/colorAccent"
+            android:textSize="18sp"
+            android:layout_below="@id/password_reset1"
+            android:layout_centerHorizontal="true"/>
+
+        <Button
+            android:id="@+id/signin_button"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="25dp"
+            app:backgroundTint="@color/colorAccent"
+            android:background="@drawable/custom_button"
+            android:text="Sign In"
+            android:textSize="20sp"
+            android:textColor="@color/colorWhite"
+            android:textAllCaps="false"
+            android:layout_below="@+id/password_reset2"
+            android:layout_centerHorizontal="true"/>
+
+        <TextView
+            android:id="@+id/new_to_app"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New to the app?"
+            android:textColor="@color/colorText"
+            android:textAllCaps="false"
+            android:textSize="18sp"
+            android:textStyle="italic"
+            android:layout_below="@+id/signin_button"
+            android:layout_marginTop="25dp"
+            android:layout_centerHorizontal="true"/>
+
+        <TextView
+            android:id="@+id/signup_now"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/colorAccent"
+            android:text="Sign up now"
             android:textColor="@color/colorAccent"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/password_reset1" />
-
-        <TextView
-            android:id="@+id/reset_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Didn't you receive the e-mail? You can retry in"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/password_reset2" />
-
-        <TextView
-            android:id="@+id/reset_timer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="TextView"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/reset_text" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-
+            android:textSize="18sp"
+            android:layout_below="@id/new_to_app"
+            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
 </ScrollView>

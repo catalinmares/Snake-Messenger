@@ -1,4 +1,4 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.managers;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

@@ -1,4 +1,4 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.contacts;
 
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -6,13 +6,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,37 +18,40 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.example.snakemessenger.EditProfileActivity;
+import com.example.snakemessenger.MainActivity;
+import com.example.snakemessenger.chats.ChatActivity;
+import com.example.snakemessenger.R;
+import com.example.snakemessenger.RecyclerTouchListener;
+import com.example.snakemessenger.RecyclerViewClickListener;
 import com.example.snakemessenger.database.Contact;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import java.util.List;
 
+import java.util.ArrayList;
+import java.util.List;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-
-/**
- * A simple {@link Fragment} subclass.
- */
 public class ContactsFragment extends Fragment {
     public static final String TAG = "ContactsFragment";
+
+    private MainActivity mainActivity;
+
     private View contactsFragmentView;
-    private SwipeRefreshLayout mRefreshLayout;
-    private TextView mNoContacts;
-    private RecyclerView mContactsRecyclerView;
-    private ContactsAdapter mAdapter;
-    private List<Contact> contacts;
-    private FloatingActionButton mAddContact;
 
-    private TextView mClosePopup;
-    private CircleImageView mUserProfilePicture;
-    private ImageView mUserStatus;
-    private TextView mUserProfileName;
-    private TextView mUserDescription;
-    private Button mSendMessage;
-    private Button mEditProfile;
+    private TextView noContacts;
 
-    private Dialog userProfileDialog;
+    private RecyclerView contactsRecyclerView;
+    private ContactsAdapter contactsAdapter;
 
     private Contact displayedContact;
+
+    private Dialog userProfileDialog;
+    private CircleImageView userProfilePicture;
+    private ImageView userStatus;
+    private TextView userProfileName;
+    private TextView userDescription;
+    private Button sendMessageBtn, editProfileBtn, deleteContactBtn;
 
     public ContactsFragment() {
     }
@@ -59,66 +59,36 @@ public class ContactsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         contactsFragmentView = inflater.inflate(R.layout.fragment_contacts, container, false);
-        mNoContacts = contactsFragmentView.findViewById(R.id.no_contacts);
-        mAddContact = contactsFragmentView.findViewById(R.id.add_friend_btn);
-        mAddContact.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                addNewFriend();
-            }
-        });
-        mRefreshLayout = contactsFragmentView.findViewById(R.id.refresh);
-        mContactsRecyclerView = contactsFragmentView.findViewById(R.id.friends_recycler_view);
 
-        RecyclerView.LayoutManager layoutManager =
-                new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
-        mContactsRecyclerView.setLayoutManager(layoutManager);
+        mainActivity = (MainActivity) getActivity();
 
-        mContactsRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getActivity(),
-                mContactsRecyclerView, new RecyclerViewClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                CircleImageView profilePic = view.findViewById(R.id.contact_image_item);
-                BitmapDrawable drawable = (BitmapDrawable) profilePic.getDrawable();
-                Bitmap image = drawable.getBitmap();
-
-                displayedContact = contacts.get(position);
-                showUserProfile(displayedContact, image);
-            }
-
-            @Override
-            public void onLongClick(View child, int position) {
-
-            }
-        }));
-
-        Log.d(TAG, "onCreateView: initialized RecyclerView");
-
-        mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                contacts = MainActivity.db.getContactDao().getContacts();
-                initializeContactsList(contacts);
-
-                mRefreshLayout.setRefreshing(false);
-            }
-        });
-
+        initializeViews();
+        initializeRecyclerView();
         initializeUserProfileDialog();
+
+        contactsAdapter = new ContactsAdapter(getContext(), new ArrayList<Contact>());
+        contactsRecyclerView.setAdapter(contactsAdapter);
 
         MainActivity.db.getContactDao().getAllContacts().observe(getViewLifecycleOwner(), new Observer<List<Contact>>() {
             @Override
             public void onChanged(List<Contact> changedContacts) {
-                contacts = changedContacts;
-                initializeContactsList(contacts);
+                contactsAdapter.setContacts(changedContacts);
+
+                if (changedContacts.isEmpty()) {
+                    noContacts.setVisibility(View.VISIBLE);
+                    contactsRecyclerView.setVisibility(View.GONE);
+                } else {
+                    noContacts.setVisibility(View.GONE);
+                    contactsRecyclerView.setVisibility(View.VISIBLE);
+                }
 
                 if (displayedContact != null) {
                     displayedContact = MainActivity.db.getContactDao().findByPhone(displayedContact.getPhone());
 
                     if (displayedContact.isConnected()) {
-                        mUserStatus.setVisibility(View.VISIBLE);
+                        userStatus.setVisibility(View.VISIBLE);
                     } else {
-                        mUserStatus.setVisibility(View.GONE);
+                        userStatus.setVisibility(View.GONE);
                     }
                 }
             }
@@ -129,11 +99,7 @@ public class ContactsFragment extends Fragment {
 
     @Override
     public void onResume() {
-        contacts = MainActivity.db.getContactDao().getContacts();
-        initializeContactsList(contacts);
-
         if (!MainActivity.discovering) {
-            MainActivity mainActivity = (MainActivity) getActivity();
             mainActivity.startDiscovering();
 
             Log.d(TAG, "onResume: started discovering in MainActivity");
@@ -142,22 +108,49 @@ public class ContactsFragment extends Fragment {
         super.onResume();
     }
 
-    public void initializeContactsList(List<Contact> contacts) {
-        mAdapter = new ContactsAdapter(contacts, getContext());
-        mContactsRecyclerView.setAdapter(mAdapter);
+    private void initializeViews() {
+        noContacts = contactsFragmentView.findViewById(R.id.no_contacts);
 
-        if (contacts.isEmpty()) {
-            mNoContacts.setVisibility(View.VISIBLE);
-        } else {
-            mNoContacts.setVisibility(View.INVISIBLE);
-        }
+        FloatingActionButton mAddContact = contactsFragmentView.findViewById(R.id.add_friend_btn);
+        mAddContact.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addNewFriend();
+            }
+        });
+    }
 
-        Log.d(TAG, "initializeContactsList: initialized contacts list with " + contacts.size() + " items");
+    private void initializeRecyclerView() {
+        contactsRecyclerView = contactsFragmentView.findViewById(R.id.friends_recycler_view);
+
+        RecyclerView.LayoutManager layoutManager =
+                new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
+        contactsRecyclerView.setLayoutManager(layoutManager);
+
+        contactsRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getActivity(),
+                contactsRecyclerView, new RecyclerViewClickListener() {
+            @Override
+            public void onClick(View view, int position) {
+                CircleImageView profilePic = view.findViewById(R.id.contact_image_item);
+                BitmapDrawable drawable = (BitmapDrawable) profilePic.getDrawable();
+                Bitmap image = drawable.getBitmap();
+
+                displayedContact = contactsAdapter.getContacts().get(position);
+                showUserProfile(displayedContact, image);
+            }
+
+            @Override
+            public void onLongClick(View child, int position) {
+
+            }
+        }));
+
+        Log.d(TAG, "initializeRecyclerView: initialized RecyclerView");
     }
 
     private void initializeUserProfileDialog() {
         userProfileDialog = new Dialog(requireContext());
-        userProfileDialog.setContentView(R.layout.user_profile_layout);
+        userProfileDialog.setContentView(R.layout.contact_profile_layout);
         userProfileDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
@@ -166,13 +159,14 @@ public class ContactsFragment extends Fragment {
             }
         });
 
-        mClosePopup = userProfileDialog.findViewById(R.id.user_profile_close);
-        mUserProfilePicture = userProfileDialog.findViewById(R.id.user_profile_pic);
-        mUserStatus = userProfileDialog.findViewById(R.id.status);
-        mUserProfileName = userProfileDialog.findViewById(R.id.user_profile_name);
-        mUserDescription = userProfileDialog.findViewById(R.id.user_description);
-        mSendMessage = userProfileDialog.findViewById(R.id.accept_btn);
-        mEditProfile = userProfileDialog.findViewById(R.id.decline_btn);
+        TextView mClosePopup = userProfileDialog.findViewById(R.id.contact_profile_close);
+        userProfilePicture = userProfileDialog.findViewById(R.id.contact_profile_pic);
+        userStatus = userProfileDialog.findViewById(R.id.contact_profile_status);
+        userProfileName = userProfileDialog.findViewById(R.id.contact_profile_name);
+        userDescription = userProfileDialog.findViewById(R.id.contact_description);
+        sendMessageBtn = userProfileDialog.findViewById(R.id.left_btn);
+        editProfileBtn = userProfileDialog.findViewById(R.id.right_btn);
+        deleteContactBtn = userProfileDialog.findViewById(R.id.delete_btn);
 
         mClosePopup.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -184,33 +178,44 @@ public class ContactsFragment extends Fragment {
         Log.d(TAG, "initializeUserProfileDialog: initialized dialog");
     }
 
-    private void showUserProfile(Contact contact, Bitmap image) {
-        mUserProfileName.setText(contact.getName());
-        mUserDescription.setText(contact.getDescription());
-        mUserProfilePicture.setImageBitmap(image);
+    private void showUserProfile(final Contact contact, Bitmap image) {
+        userProfileName.setText(contact.getName());
+        userDescription.setText(contact.getDescription());
+        Glide.with(mainActivity).load(image).into(userProfilePicture);
 
-        final Contact selectedContact = MainActivity.db.getContactDao().findByPhone(contact.getPhone());
-
-        if (selectedContact.isConnected()) {
-            mUserStatus.setVisibility(View.VISIBLE);
+        if (contact.isConnected()) {
+            userStatus.setVisibility(View.VISIBLE);
         } else {
-            mUserStatus.setVisibility(View.GONE);
+            userStatus.setVisibility(View.GONE);
         }
 
-        mSendMessage.setText("Send message");
-        mSendMessage.setOnClickListener(new View.OnClickListener() {
+        sendMessageBtn.setText(R.string.send_message);
+        sendMessageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendUserToPrivateChat(selectedContact);
+                sendUserToChatActivity(contact);
                 userProfileDialog.dismiss();
             }
         });
 
-        mEditProfile.setText("Edit contact");
-        mEditProfile.setOnClickListener(new View.OnClickListener() {
+        editProfileBtn.setText(R.string.edit_contact);
+        editProfileBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendUserToEditProfile(contact);
+                userProfileDialog.dismiss();
+            }
+        });
+
+        deleteContactBtn.setText(R.string.delete_contact);
+        deleteContactBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendUserToEditProfile(selectedContact);
+                contact.setSaved(false);
+                contact.setPhotoUri(null);
+                contact.setName(contact.getPhone());
+                contact.setDescription("");
+                MainActivity.db.getContactDao().updateContact(contact);
                 userProfileDialog.dismiss();
             }
         });
@@ -229,22 +234,15 @@ public class ContactsFragment extends Fragment {
         startActivity(editProfileIntent);
     }
 
-    private void sendUserToPrivateChat(Contact contact) {
+    private void sendUserToChatActivity(Contact contact) {
         Log.d(TAG, "sendUserToPrivateChat: sending user to private chat with device named " + contact.getName());
 
-        Intent privateChatIntent = new Intent(getActivity(), PrivateChatActivity.class);
+        Intent privateChatIntent = new Intent(getActivity(), ChatActivity.class);
         privateChatIntent.putExtra("phone", contact.getPhone());
         startActivity(privateChatIntent);
     }
 
     private void addNewFriend() {
-        if (MainActivity.discovering) {
-            MainActivity mainActivity = (MainActivity) getActivity();
-            mainActivity.stopDiscovering();
-
-            Log.d(TAG, "addNewFriend: stopped discovering in MainActivity");
-        }
-
         Log.d(TAG, "addNewFriend: sending user to AddContactActivity...");
 
         Intent addFriendIntent = new Intent(getContext(), AddContactActivity.class);

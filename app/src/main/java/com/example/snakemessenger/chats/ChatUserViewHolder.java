@@ -1,17 +1,17 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.chats;
 
 import android.view.View;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.example.snakemessenger.R;
 import de.hdodenhof.circleimageview.CircleImageView;
+import hani.momanii.supernova_emoji_library.Helper.EmojiconTextView;
 
 class ChatUserViewHolder extends RecyclerView.ViewHolder {
     private CircleImageView mSenderProfilePicture;
     private TextView mSenderName;
-    private TextView mMessageContent;
+    private EmojiconTextView mMessageContent;
     private TextView mTimestamp;
 
     public ChatUserViewHolder(@NonNull View itemView) {
@@ -31,7 +31,7 @@ class ChatUserViewHolder extends RecyclerView.ViewHolder {
         return mSenderName;
     }
 
-    public TextView getMessageContent() {
+    public EmojiconTextView getMessageContent() {
         return mMessageContent;
     }
 

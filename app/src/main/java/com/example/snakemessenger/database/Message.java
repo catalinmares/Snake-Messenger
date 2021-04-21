@@ -1,4 +1,4 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.database;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;

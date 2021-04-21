@@ -1,4 +1,4 @@
-package com.example.snakemessenger;
+package com.example.snakemessenger.database;
 
 import androidx.room.Database;
 import androidx.room.RoomDatabase;

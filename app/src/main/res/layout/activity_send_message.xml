@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<RelativeLayout android:id="@+id/root_view"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark"
-    tools:context=".chats.SendMessageActivity">
+    tools:context=".chats.SendMessageActivity"
+    xmlns:emojicon="http://schemas.android.com/apk/res-auto">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/send_msg_appBarLayout"
@@ -55,7 +56,8 @@
         android:id="@+id/send_message_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/relative_layout"/>
+        android:layout_below="@+id/relative_layout"
+        android:layout_above="@+id/input_layout"/>
 
     <TextView
         android:id="@+id/no_contacts"
@@ -68,32 +70,49 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"/>
 
-    <EditText
-        android:id="@+id/input_message"
+    <RelativeLayout
+        android:id="@+id/input_layout"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:ems="10"
-        android:hint="Type a message..."
-        android:textColorHint="@color/colorText"
-        android:textColor="@color/colorPrimaryDark"
-        android:inputType="textCapSentences|textMultiLine"
-        android:drawableEnd="@drawable/ic_baseline_emoji_emotions_24"
-        android:drawableTint="@color/colorAccent"
-        android:drawablePadding="12dp"
-        android:background="@drawable/custom_input"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:layout_toStartOf="@+id/send_message_btn"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"/>
+        android:layout_alignParentBottom="true">
 
-    <ImageButton
-        android:id="@+id/send_message_btn"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_gravity="center"
-        android:backgroundTint="@color/colorPrimaryDark"
-        android:src="@drawable/ic_send_white_24dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"/>
+        <ImageView
+            android:id="@+id/pick_emoji_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:backgroundTint="@color/colorPrimaryDark"
+            android:padding="4dp"
+            android:src="@drawable/ic_baseline_emoji_emotions_24"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"/>
+
+        <hani.momanii.supernova_emoji_library.Helper.EmojiconEditText
+            android:id="@+id/input_message"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:ems="10"
+            android:hint="Type a message..."
+            android:textColorHint="@color/colorText"
+            android:textColor="@color/colorPrimaryDark"
+            android:inputType="textCapSentences|textMultiLine"
+            android:background="@drawable/custom_input"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_toStartOf="@+id/send_message_btn"
+            android:layout_toEndOf="@id/pick_emoji_btn"
+            android:layout_alignParentBottom="true"
+            emojicon:emojiconSize="30sp"/>
+
+        <ImageView
+            android:id="@+id/send_message_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:backgroundTint="@color/colorPrimaryDark"
+            android:src="@drawable/ic_send_white_24dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
+
 </RelativeLayout>
