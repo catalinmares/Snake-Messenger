@@ -34,26 +34,6 @@
             android:layout_centerHorizontal="true"/>
 
         <EditText
-            android:id="@+id/phone"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginHorizontal="20dp"
-            android:ems="10"
-            android:hint="Phone number"
-            android:textColorHint="@color/colorText"
-            android:drawableStart="@drawable/ic_baseline_call_24"
-            android:drawableTint="@color/colorPrimary"
-            android:drawablePadding="12dp"
-            android:inputType="phone"
-            android:textColor="@color/colorPrimaryDark"
-            android:background="@drawable/custom_input"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:layout_below="@id/app_name"
-            android:layout_marginTop="50dp"
-            android:layout_centerHorizontal="true"/>
-
-        <EditText
             android:id="@+id/password"
             android:layout_width="match_parent"
             android:layout_height="50dp"
@@ -69,33 +49,9 @@
             android:background="@drawable/custom_input"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            android:layout_below="@id/phone"
+            android:layout_below="@id/app_name"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="30dp"/>
-
-        <TextView
-            android:id="@+id/password_reset1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Forgot your password?"
-            android:textStyle="italic"
-            android:textColor="@color/colorText"
-            android:textSize="18sp"
-            android:layout_below="@id/password"
-            android:layout_centerHorizontal="true"/>
-
-        <TextView
-            android:id="@+id/password_reset2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Reset it now"
-            android:textStyle="bold"
-            android:textColor="@color/colorAccent"
-            android:textSize="18sp"
-            android:layout_below="@id/password_reset1"
-            android:layout_centerHorizontal="true"/>
 
         <Button
             android:id="@+id/signin_button"
@@ -109,7 +65,7 @@
             android:textSize="20sp"
             android:textColor="@color/colorWhite"
             android:textAllCaps="false"
-            android:layout_below="@+id/password_reset2"
+            android:layout_below="@+id/password"
             android:layout_centerHorizontal="true"/>
 
         <TextView

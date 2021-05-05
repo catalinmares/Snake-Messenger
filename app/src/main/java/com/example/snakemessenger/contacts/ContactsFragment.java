@@ -1,13 +1,11 @@
 package com.example.snakemessenger.contacts;
 
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
@@ -25,12 +23,14 @@ import com.example.snakemessenger.chats.ChatActivity;
 import com.example.snakemessenger.R;
 import com.example.snakemessenger.RecyclerTouchListener;
 import com.example.snakemessenger.RecyclerViewClickListener;
-import com.example.snakemessenger.database.Contact;
+import com.example.snakemessenger.models.Contact;
+import com.example.snakemessenger.general.Constants;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
-import java.util.List;
 import de.hdodenhof.circleimageview.CircleImageView;
+
+import static com.example.snakemessenger.MainActivity.db;
 
 public class ContactsFragment extends Fragment {
     public static final String TAG = "ContactsFragment";
@@ -66,30 +66,27 @@ public class ContactsFragment extends Fragment {
         initializeRecyclerView();
         initializeUserProfileDialog();
 
-        contactsAdapter = new ContactsAdapter(getContext(), new ArrayList<Contact>());
+        contactsAdapter = new ContactsAdapter(getContext(), new ArrayList<>());
         contactsRecyclerView.setAdapter(contactsAdapter);
 
-        MainActivity.db.getContactDao().getAllContacts().observe(getViewLifecycleOwner(), new Observer<List<Contact>>() {
-            @Override
-            public void onChanged(List<Contact> changedContacts) {
-                contactsAdapter.setContacts(changedContacts);
+        db.getContactDao().getAllContacts().observe(getViewLifecycleOwner(), changedContacts -> {
+            contactsAdapter.setContacts(changedContacts);
 
-                if (changedContacts.isEmpty()) {
-                    noContacts.setVisibility(View.VISIBLE);
-                    contactsRecyclerView.setVisibility(View.GONE);
+            if (changedContacts.isEmpty()) {
+                noContacts.setVisibility(View.VISIBLE);
+                contactsRecyclerView.setVisibility(View.GONE);
+            } else {
+                noContacts.setVisibility(View.GONE);
+                contactsRecyclerView.setVisibility(View.VISIBLE);
+            }
+
+            if (displayedContact != null) {
+                displayedContact = db.getContactDao().findByDeviceId(displayedContact.getDeviceID());
+
+                if (displayedContact.isConnected()) {
+                    userStatus.setVisibility(View.VISIBLE);
                 } else {
-                    noContacts.setVisibility(View.GONE);
-                    contactsRecyclerView.setVisibility(View.VISIBLE);
-                }
-
-                if (displayedContact != null) {
-                    displayedContact = MainActivity.db.getContactDao().findByPhone(displayedContact.getPhone());
-
-                    if (displayedContact.isConnected()) {
-                        userStatus.setVisibility(View.VISIBLE);
-                    } else {
-                        userStatus.setVisibility(View.GONE);
-                    }
+                    userStatus.setVisibility(View.GONE);
                 }
             }
         });
@@ -97,27 +94,11 @@ public class ContactsFragment extends Fragment {
         return contactsFragmentView;
     }
 
-    @Override
-    public void onResume() {
-        if (!MainActivity.discovering) {
-            mainActivity.startDiscovering();
-
-            Log.d(TAG, "onResume: started discovering in MainActivity");
-        }
-
-        super.onResume();
-    }
-
     private void initializeViews() {
         noContacts = contactsFragmentView.findViewById(R.id.no_contacts);
 
         FloatingActionButton mAddContact = contactsFragmentView.findViewById(R.id.add_friend_btn);
-        mAddContact.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                addNewFriend();
-            }
-        });
+        mAddContact.setOnClickListener(view -> addNewContact());
     }
 
     private void initializeRecyclerView() {
@@ -151,12 +132,9 @@ public class ContactsFragment extends Fragment {
     private void initializeUserProfileDialog() {
         userProfileDialog = new Dialog(requireContext());
         userProfileDialog.setContentView(R.layout.contact_profile_layout);
-        userProfileDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialogInterface) {
-                displayedContact = null;
-                Log.d(TAG, "onDismiss: user profile dialog dismissed");
-            }
+        userProfileDialog.setOnDismissListener(dialogInterface -> {
+            displayedContact = null;
+            Log.d(TAG, "onDismiss: user profile dialog dismissed");
         });
 
         TextView mClosePopup = userProfileDialog.findViewById(R.id.contact_profile_close);
@@ -168,12 +146,7 @@ public class ContactsFragment extends Fragment {
         editProfileBtn = userProfileDialog.findViewById(R.id.right_btn);
         deleteContactBtn = userProfileDialog.findViewById(R.id.delete_btn);
 
-        mClosePopup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                userProfileDialog.dismiss();
-            }
-        });
+        mClosePopup.setOnClickListener(view -> userProfileDialog.dismiss());
 
         Log.d(TAG, "initializeUserProfileDialog: initialized dialog");
     }
@@ -190,34 +163,26 @@ public class ContactsFragment extends Fragment {
         }
 
         sendMessageBtn.setText(R.string.send_message);
-        sendMessageBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sendUserToChatActivity(contact);
-                userProfileDialog.dismiss();
-            }
+        sendMessageBtn.setOnClickListener(view -> {
+            sendUserToChatActivity(contact);
+            userProfileDialog.dismiss();
         });
 
         editProfileBtn.setText(R.string.edit_contact);
-        editProfileBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendUserToEditProfile(contact);
-                userProfileDialog.dismiss();
-            }
+        editProfileBtn.setOnClickListener(v -> {
+            sendUserToEditProfile(contact);
+            userProfileDialog.dismiss();
         });
 
         deleteContactBtn.setText(R.string.delete_contact);
-        deleteContactBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                contact.setSaved(false);
-                contact.setPhotoUri(null);
-                contact.setName(contact.getPhone());
-                contact.setDescription("");
-                MainActivity.db.getContactDao().updateContact(contact);
-                userProfileDialog.dismiss();
-            }
+        deleteContactBtn.setOnClickListener(view -> {
+            contact.setSaved(false);
+            contact.setPhotoUri(null);
+            contact.setName(contact.getDeviceID());
+            contact.setDescription("");
+
+            db.getContactDao().updateContact(contact);
+            userProfileDialog.dismiss();
         });
 
         userProfileDialog.show();
@@ -229,8 +194,7 @@ public class ContactsFragment extends Fragment {
         Log.d(TAG, "sendUserToEditProfile: sending user to editing profile of device named " + contact.getName());
 
         Intent editProfileIntent = new Intent(getActivity(), EditProfileActivity.class);
-        editProfileIntent.putExtra("name", contact.getName());
-        editProfileIntent.putExtra("phone", contact.getPhone());
+        editProfileIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
         startActivity(editProfileIntent);
     }
 
@@ -238,14 +202,14 @@ public class ContactsFragment extends Fragment {
         Log.d(TAG, "sendUserToPrivateChat: sending user to private chat with device named " + contact.getName());
 
         Intent privateChatIntent = new Intent(getActivity(), ChatActivity.class);
-        privateChatIntent.putExtra("phone", contact.getPhone());
+        privateChatIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
         startActivity(privateChatIntent);
     }
 
-    private void addNewFriend() {
+    private void addNewContact() {
         Log.d(TAG, "addNewFriend: sending user to AddContactActivity...");
 
-        Intent addFriendIntent = new Intent(getContext(), AddContactActivity.class);
-        startActivity(addFriendIntent);
+        Intent addContactIntent = new Intent(getContext(), AddContactActivity.class);
+        startActivity(addContactIntent);
     }
 }

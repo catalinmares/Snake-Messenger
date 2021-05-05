@@ -1,6 +1,4 @@
-package com.example.snakemessenger.chats;
-
-import com.example.snakemessenger.database.Contact;
+package com.example.snakemessenger.models;
 
 public class ContactWrapper {
     private Contact contact;

@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,26 +23,27 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.snakemessenger.EditProfileActivity;
+import com.example.snakemessenger.general.Constants;
+import com.example.snakemessenger.managers.CommunicationManager;
 import com.example.snakemessenger.managers.DateManager;
 import com.example.snakemessenger.MainActivity;
 import com.example.snakemessenger.R;
-import com.example.snakemessenger.database.Contact;
-import com.example.snakemessenger.database.Message;
-import com.google.android.gms.nearby.Nearby;
+import com.example.snakemessenger.models.Contact;
 import com.google.android.gms.nearby.connection.ConnectionsClient;
-import com.google.android.gms.nearby.connection.Payload;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import hani.momanii.supernova_emoji_library.Actions.EmojIconActions;
 import hani.momanii.supernova_emoji_library.Helper.EmojiconEditText;
+
+import static com.example.snakemessenger.MainActivity.db;
+import static com.example.snakemessenger.MainActivity.myDeviceId;
+import static com.example.snakemessenger.MainActivity.currentChat;
 
 public class ChatActivity extends AppCompatActivity {
     public static final String TAG = ChatActivity.class.getSimpleName();
@@ -72,11 +72,11 @@ public class ChatActivity extends AppCompatActivity {
 
         initializeToolbar();
 
-        String contactPhone = Objects.requireNonNull(getIntent().getStringExtra("phone"));
-        contact = MainActivity.db.getContactDao().findByPhone(contactPhone);
+        String contactDeviceId = Objects.requireNonNull(getIntent().getStringExtra(Constants.EXTRA_CONTACT_DEVICE_ID));
+        contact = db.getContactDao().findByDeviceId(contactDeviceId);
 
         if (MainActivity.notificationMessages.get(contact.getId()) != null) {
-            MainActivity.notificationMessages.put(contact.getId(), new ArrayList<Message>());
+            MainActivity.notificationMessages.put(contact.getId(), new ArrayList<>());
         }
 
         updateUI(contact);
@@ -87,44 +87,39 @@ public class ChatActivity extends AppCompatActivity {
         emojIconActions.ShowEmojIcon();
         emojIconActions.setIconsIds(R.drawable.ic_baseline_keyboard_24, R.drawable.ic_baseline_emoji_emotions_24);
 
-        MainActivity.db.getContactDao().findChangedByPhone(contactPhone).observe(this, new Observer<Contact>() {
-            @Override
-            public void onChanged(Contact changedContact) {
-                if (changedContact.isConnected() && !isContactConnected) {
-                    isContactConnected = true;
-                    contactStatus.setText("Active now");
-                    contactConnected.setVisibility(View.VISIBLE);
-                } else if (!changedContact.isConnected() && isContactConnected) {
-                    Date currentTime = Calendar.getInstance().getTime();
-                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        db.getContactDao().findChangedByDeviceId(contactDeviceId).observe(this, changedContact -> {
+            if (changedContact.isConnected() && !isContactConnected) {
+                isContactConnected = true;
+                contactStatus.setText(R.string.active_now);
+                contactConnected.setVisibility(View.VISIBLE);
+            } else if (!changedContact.isConnected() && isContactConnected) {
+                Date currentTime = new Date(System.currentTimeMillis());
+                SimpleDateFormat df = new SimpleDateFormat(Constants.DATE_TIME_FORMAT, Locale.US);
 
-                    isContactConnected = false;
-                    contactStatus.setText(
-                            String.format(
-                                    "Last seen %s",
-                                    DateManager.getLastActiveText(
-                                            df.format(currentTime),
-                                            changedContact.getLastActive()
-                                    )
-                            )
-                    );
+                isContactConnected = false;
 
-                    contactConnected.setVisibility(View.GONE);
-                }
+                contactStatus.setText(
+                        String.format(
+                                "Last seen %s",
+                                DateManager.getLastActiveText(
+                                        df.format(currentTime),
+                                        df.format(new Date(contact.getLastActive()))
+                                )
+                        )
+                );
 
-                contact = changedContact;
+                contactConnected.setVisibility(View.GONE);
             }
+
+            contact = changedContact;
         });
 
-        chatAdapter = new ChatAdapter(this, new ArrayList<Message>(), contact);
+        chatAdapter = new ChatAdapter(this, new ArrayList<>(), contact);
         messagesRecyclerView.setAdapter(chatAdapter);
 
-        MainActivity.db.getMessageDao().getLiveMessages(contactPhone).observe(this, new Observer<List<Message>>() {
-            @Override
-            public void onChanged(List<Message> newMessages) {
-                chatAdapter.setMessages(newMessages);
-                messagesRecyclerView.scrollToPosition(newMessages.size() - 1);
-            }
+        db.getMessageDao().getLiveMessages(myDeviceId, contactDeviceId).observe(this, newMessages -> {
+            chatAdapter.setMessages(newMessages);
+            messagesRecyclerView.scrollToPosition(newMessages.size() - 1);
         });
     }
 
@@ -132,12 +127,12 @@ public class ChatActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        MainActivity.currentChat = contact.getPhone();
+        currentChat = contact.getDeviceID();
     }
 
     @Override
     protected void onStop() {
-        MainActivity.currentChat = null;
+        currentChat = null;
         super.onStop();
     }
 
@@ -157,20 +152,9 @@ public class ChatActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.chat_edit_option) {
             Log.d(TAG, "onOptionsItemSelected: settings option selected");
             sendUserToEditProfileActivity(contact);
-        } else if (item.getItemId() == R.id.chat_block_option) {
-            /* TODO: Add blocking option */
-        } else if (item.getItemId() == R.id.chat_delete_option) {
-            /* TODO: Add deleting option */
         }
 
         return true;
-    }
-
-    private void sendUserToEditProfileActivity(Contact contact) {
-        Log.d(TAG, "sendUserToSettingActivity: starting edit contact activity...");
-        Intent editContactIntent = new Intent(ChatActivity.this, EditProfileActivity.class);
-        editContactIntent.putExtra("phone", contact.getPhone());
-        startActivityForResult(editContactIntent, EDIT_PROFILE_REQUEST);
     }
 
     private void initializeToolbar() {
@@ -183,12 +167,7 @@ public class ChatActivity extends AppCompatActivity {
         contactConnected = mToolbar.findViewById(R.id.status);
 
         ImageView mBackButton = mToolbar.findViewById(R.id.back_btn);
-        mBackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onBackPressed();
-            }
-        });
+        mBackButton.setOnClickListener(view -> onBackPressed());
 
         Log.d(TAG, "initializeToolbar: initialized toolbar");
     }
@@ -197,16 +176,17 @@ public class ChatActivity extends AppCompatActivity {
         contactName.setText(contact.getName());
 
         if (!contact.isConnected()) {
-            Date currentTime = Calendar.getInstance().getTime();
-            SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US);
+            Date currentTime = new Date(System.currentTimeMillis());
+            SimpleDateFormat df = new SimpleDateFormat(Constants.DATE_TIME_FORMAT, Locale.US);
 
             isContactConnected = false;
+
             contactStatus.setText(
                     String.format(
                             "Last seen %s",
                             DateManager.getLastActiveText(
                                     df.format(currentTime),
-                                    contact.getLastActive()
+                                    df.format(new Date(contact.getLastActive()))
                             )
                     )
             );
@@ -231,11 +211,7 @@ public class ChatActivity extends AppCompatActivity {
 
                 Log.d(TAG, "updateUI: loaded contact photo from device");
             } catch (IOException e) {
-                Toast.makeText(
-                        ChatActivity.this,
-                        "Failed to load image from device.",
-                        Toast.LENGTH_SHORT
-                ).show();
+                Toast.makeText(ChatActivity.this, Constants.TOAST_FAILED_TO_LOAD_IMAGE, Toast.LENGTH_SHORT).show();
 
                 e.printStackTrace();
             }
@@ -249,26 +225,16 @@ public class ChatActivity extends AppCompatActivity {
 
         userMessageInput = findViewById(R.id.input_message);
 
-        ImageView mSendMessageButton = findViewById(R.id.send_message_btn);
-        mSendMessageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String message = userMessageInput.getText().toString();
+        ImageView sendMessageButton = findViewById(R.id.send_message_btn);
+        sendMessageButton.setOnClickListener(view -> {
+            String message = userMessageInput.getText().toString();
 
-                if (!TextUtils.isEmpty(message)) {
-                    if (message.getBytes().length > ConnectionsClient.MAX_BYTES_DATA_SIZE) {
-                        Toast.makeText(
-                                ChatActivity.this,
-                                "The message is too long!",
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    } else {
-                        Payload messagePayload = Payload.fromBytes(message.getBytes());
-                        Nearby.getConnectionsClient(getApplicationContext()).sendPayload(contact.getEndpointID(), messagePayload);
-                        userMessageInput.setText("");
-
-                        saveMessageInfoToDatabase(messagePayload, message);
-                    }
+            if (!TextUtils.isEmpty(message)) {
+                if (message.getBytes().length > ConnectionsClient.MAX_BYTES_DATA_SIZE) {
+                    Toast.makeText(ChatActivity.this, Constants.TOAST_MESSAGE_TOO_LONG, Toast.LENGTH_SHORT).show();
+                } else {
+                    CommunicationManager.buildAndDeliverMessage(getApplicationContext(), message, contact);
+                    userMessageInput.setText("");
                 }
             }
         });
@@ -286,36 +252,22 @@ public class ChatActivity extends AppCompatActivity {
         Log.d(TAG, "initializeRecyclerView: initialized RecyclerView");
     }
 
-    private void saveMessageInfoToDatabase(Payload payload, String message) {
-        MainActivity.db.getMessageDao().addMessage(new Message(
-                0,
-                payload.getId(),
-                payload.getType(),
-                contact.getPhone(),
-                message,
-                Calendar.getInstance().getTime(),
-                Message.SENT
-        ));
-
-        Log.d(TAG, "saveMessageInfoToDatabase: saved message to Room");
-
-        if (!contact.isChat()) {
-            contact.setChat(true);
-
-            MainActivity.db.getContactDao().updateContact(contact);
-
-            Log.d(TAG, "saveMessageInfoToDatabase: user is a new chat contact");
-        }
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == EDIT_PROFILE_REQUEST && resultCode == Activity.RESULT_OK) {
-            contact = MainActivity.db.getContactDao().findByPhone(contact.getPhone());
+            contact = db.getContactDao().findByDeviceId(contact.getDeviceID());
             chatAdapter.setContact(contact);
             updateUI(contact);
         }
+    }
+
+    private void sendUserToEditProfileActivity(Contact contact) {
+        Log.d(TAG, "sendUserToSettingActivity: starting edit contact activity...");
+
+        Intent editContactIntent = new Intent(ChatActivity.this, EditProfileActivity.class);
+        editContactIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
+        startActivityForResult(editContactIntent, EDIT_PROFILE_REQUEST);
     }
 }

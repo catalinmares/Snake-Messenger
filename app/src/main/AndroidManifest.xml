@@ -8,6 +8,7 @@
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -37,9 +38,9 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".services.AppStoppedService"
-            android:stopWithTask="false" />
+        <service android:name=".services.BackgroundCommunicationService"
+            android:enabled="true"
+            android:exported="false"/>
 
         <meta-data
             android:name="com.google.android.nearby.messages.API_KEY"

@@ -37,7 +37,7 @@
         app:fabSize="normal"
         android:backgroundTint="@color/colorAccent"
         android:elevation="6dp"
-        android:src="@drawable/ic_message"
+        android:src="@drawable/ic_person_add_black_24dp"
         app:tint="@color/colorSecondary"
         android:layout_alignBottom="@id/layout"
         android:layout_alignEnd="@id/layout"/>

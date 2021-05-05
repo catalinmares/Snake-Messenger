@@ -9,14 +9,13 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.snakemessenger.MainActivity;
 import com.example.snakemessenger.R;
-import com.example.snakemessenger.database.Contact;
+import com.example.snakemessenger.models.Contact;
 
 import java.util.List;
 
 public class NearbyContactsAdapter extends RecyclerView.Adapter<ContactsViewHolder> {
-    private Context context;
+    private final Context context;
     private List<Contact> users;
 
     public NearbyContactsAdapter(Context context, List<Contact> users) {
@@ -37,15 +36,15 @@ public class NearbyContactsAdapter extends RecyclerView.Adapter<ContactsViewHold
     public void onBindViewHolder(@NonNull final ContactsViewHolder holder, int position) {
         Contact currentContact = users.get(position);
 
-        holder.getContactName().setText(currentContact.getName());
+        holder.getContactNameTextView().setText(currentContact.getName());
 
         if (currentContact.getPhotoUri() != null) {
-            Glide.with(context).load(Uri.parse(currentContact.getPhotoUri())).into(holder.getProfilePic());
+            Glide.with(context).load(Uri.parse(currentContact.getPhotoUri())).into(holder.getProfilePictureImageView());
         } else {
-            Glide.with(context).load(R.drawable.profile_image).into(holder.getProfilePic());
+            Glide.with(context).load(R.drawable.profile_image).into(holder.getProfilePictureImageView());
         }
 
-        holder.getTimestamp().setVisibility(View.GONE);
+        holder.getTimestampTextView().setVisibility(View.GONE);
     }
 
     @Override

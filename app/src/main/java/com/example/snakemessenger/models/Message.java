@@ -1,25 +1,18 @@
-package com.example.snakemessenger.database;
+package com.example.snakemessenger.models;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
-import java.util.Date;
 
 @Entity(tableName = "messages")
 public
 class Message {
-    @Ignore
-    public static final int SENT = 0;
-
-    @Ignore
-    public static final int DELIVERED = 1;
-
-    @Ignore
-    public static final int RECEIVED = 2;
-
     @PrimaryKey(autoGenerate = true)
     private int id;
+
+    @ColumnInfo(name = "messageId")
+    private String messageId;
 
     @ColumnInfo(name = "payloadId")
     private long payloadId;
@@ -27,14 +20,20 @@ class Message {
     @ColumnInfo(name = "type")
     private int type;
 
-    @ColumnInfo(name = "to_from")
-    private String toFrom;
+    @ColumnInfo(name = "source")
+    private String source;
+
+    @ColumnInfo(name = "destination")
+    private String destination;
 
     @ColumnInfo(name = "content")
     private String content;
 
     @ColumnInfo(name = "timestamp")
-    private Date timestamp;
+    private long timestamp;
+
+    @ColumnInfo(name = "timesSent")
+    private int timesSent;
 
     @ColumnInfo(name = "status")
     private int status;
@@ -43,13 +42,16 @@ class Message {
     public Message() {
     }
 
-    public Message(int id, long payloadId, int type, String toFrom, String content, Date timestamp, int status) {
+    public Message(int id, String messageId, long payloadId, int type, String source, String destination, String content, long timestamp, int timesSent, int status) {
         this.id = id;
+        this.messageId = messageId;
         this.payloadId = payloadId;
         this.type = type;
-        this.toFrom = toFrom;
+        this.source = source;
+        this.destination = destination;
         this.content = content;
         this.timestamp = timestamp;
+        this.timesSent = timesSent;
         this.status = status;
     }
 
@@ -59,6 +61,10 @@ class Message {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getMessageId() {
+        return messageId;
     }
 
     public long getPayloadId() {
@@ -77,12 +83,20 @@ class Message {
         this.type = type;
     }
 
-    public String getToFrom() {
-        return toFrom;
+    public String getSource() {
+        return source;
     }
 
-    public void setToFrom(String toFrom) {
-        this.toFrom = toFrom;
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
     }
 
     public String getContent() {
@@ -93,12 +107,20 @@ class Message {
         this.content = content;
     }
 
-    public Date getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public int getTimesSent() {
+        return timesSent;
+    }
+
+    public void setTimesSent(int timesSent) {
+        this.timesSent = timesSent;
     }
 
     public int getStatus() {

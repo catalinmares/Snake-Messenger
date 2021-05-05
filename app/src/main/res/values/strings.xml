@@ -35,8 +35,13 @@
     <string name="tab_text_2">Tab 2</string>
     <string name="active_now">Active now</string>
     <string name="send_message">Send message</string>
+    <string name="save_contact">Save contact</string>
     <string name="edit_contact">Edit contact</string>
-    <string name="accept_request">Accept request</string>
-    <string name="delete_request">Delete request</string>
     <string name="delete_contact">Delete contact</string>
+    <string name="no_contacts_selected">No contacts selected.</string>
+    <string name="nearby_users">Nearby users</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="password">Password</string>
+    <string name="name">Name</string>
 </resources>

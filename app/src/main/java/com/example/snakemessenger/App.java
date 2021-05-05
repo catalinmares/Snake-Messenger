@@ -15,6 +15,6 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        NotificationHandler.createNotificationChannels(getSystemService(NotificationManager.class));
+        NotificationHandler.createNotificationChannel(getSystemService(NotificationManager.class));
     }
 }

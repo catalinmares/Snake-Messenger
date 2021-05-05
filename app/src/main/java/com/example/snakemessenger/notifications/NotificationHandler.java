@@ -1,6 +1,5 @@
 package com.example.snakemessenger.notifications;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -12,44 +11,33 @@ import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.RemoteInput;
-
-import com.example.snakemessenger.EditProfileActivity;
-import com.example.snakemessenger.MainActivity;
 import com.example.snakemessenger.R;
 import com.example.snakemessenger.chats.ChatActivity;
-import com.example.snakemessenger.database.Contact;
-import com.example.snakemessenger.database.Message;
+import com.example.snakemessenger.models.Contact;
+import com.example.snakemessenger.models.Message;
+import com.example.snakemessenger.general.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.example.snakemessenger.MainActivity.db;
+import static com.example.snakemessenger.MainActivity.notificationMessages;
 
 public class NotificationHandler {
     public static final String MESSAGE_CHANNEL_ID = "Messages channel";
-    public static final String REQUEST_CHANNEL_ID = "Requests channel";
 
-    public static void createNotificationChannels(NotificationManager manager) {
+    public static void createNotificationChannel(NotificationManager manager) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel messageChannel = new NotificationChannel(
                     MESSAGE_CHANNEL_ID,
-                    "Messages",
+                    Constants.MESSAGES_NOTIFICATION_CHANNEL,
                     NotificationManager.IMPORTANCE_HIGH
             );
 
-            messageChannel.setDescription("This channel is dedicated to notifications about new incoming messages inside the application");
-
-            NotificationChannel requestChannel = new NotificationChannel(
-                    REQUEST_CHANNEL_ID,
-                    "Connection requests",
-                    NotificationManager.IMPORTANCE_HIGH
-            );
-
-            requestChannel.setDescription("This channel is dedicated to notifications about new incoming connection requests inside the application");
+            messageChannel.setDescription(Constants.MESSAGES_NOTIFICATION_CHANNEL_DESCRIPTION);
 
             manager.createNotificationChannel(messageChannel);
-            manager.createNotificationChannel(requestChannel);
         }
     }
 
@@ -60,7 +48,7 @@ public class NotificationHandler {
                         Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK
         );
 
-        activityIntent.putExtra("phone", contact.getPhone());
+        activityIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
         PendingIntent contentIntent = PendingIntent.getActivity(
                 context,
                 contact.getId(),
@@ -68,16 +56,13 @@ public class NotificationHandler {
                 0
         );
 
-        RemoteInput remoteInput = new RemoteInput.Builder("key_text_reply")
-                .setLabel("Your answer...")
-                .build();
-
         Intent replyIntent;
         PendingIntent replyPendingIntent;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             replyIntent = new Intent(context, NotificationReceiver.class);
-            replyIntent.putExtra("phone", contact.getPhone());
+            replyIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
+            replyIntent.putExtra(Constants.EXTRA_NOTIFICATION_ID, contact.getId());
             replyPendingIntent = PendingIntent.getBroadcast(
                     context,
                     contact.getId(),
@@ -87,49 +72,53 @@ public class NotificationHandler {
         } else {
             replyIntent = new Intent(context, ChatActivity.class);
             replyIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            replyIntent.putExtra("phone", contact.getPhone());
+            replyIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
             replyPendingIntent = PendingIntent.getActivity(
                     context,
                     contact.getId(),
-                    activityIntent,
+                    replyIntent,
                     PendingIntent.FLAG_CANCEL_CURRENT
             );
         }
 
+        RemoteInput remoteInput = new RemoteInput.Builder(Constants.REMOTE_INPUT_RESULT_KEY)
+                .setLabel(Constants.REMOTE_INPUT_LABEL_TEXT)
+                .build();
+
         NotificationCompat.Action replyAction = new NotificationCompat.Action.Builder(
                 R.drawable.ic_send_white_24dp,
-                "Reply",
+                Constants.NOTIFICATION_MESSAGE_REPLY_TEXT,
                 replyPendingIntent
         ).addRemoteInput(remoteInput).build();
 
         NotificationCompat.MessagingStyle messagingStyle =
-                new NotificationCompat.MessagingStyle("Me");
+                new NotificationCompat.MessagingStyle(Constants.NOTIFICATION_MESSAGE_USER_NAME);
 
-        List<Message> messages = MainActivity.notificationMessages.get(contact.getId());
+        List<Message> messages = notificationMessages.get(contact.getId());
 
         if (messages == null) {
             messages = new ArrayList<>();
         }
 
         messages.add(message);
-        MainActivity.notificationMessages.put(contact.getId(), messages);
+        notificationMessages.put(contact.getId(), messages);
 
         for (Message msg : messages) {
             NotificationCompat.MessagingStyle.Message notificationMessage;
-            if (msg.getStatus() == Message.RECEIVED) {
-                Contact sender = MainActivity.db.getContactDao().findByPhone(msg.getToFrom());
+            if (msg.getStatus() == Constants.MESSAGE_STATUS_RECEIVED) {
+                Contact sender = db.getContactDao().findByDeviceId(msg.getSource());
 
                 notificationMessage = new NotificationCompat.MessagingStyle.Message(
                         msg.getContent(),
-                        msg.getTimestamp().getTime(),
+                        msg.getTimestamp(),
                         sender.getName()
                 );
             } else {
-                SharedPreferences sharedPreferences = context.getSharedPreferences("LOGIN_DETAILS", MODE_PRIVATE);
+                SharedPreferences sharedPreferences = context.getSharedPreferences(Constants.SHARED_PREFERENCES, MODE_PRIVATE);
                 notificationMessage = new NotificationCompat.MessagingStyle.Message(
                         msg.getContent(),
-                        msg.getTimestamp().getTime(),
-                        sharedPreferences.getString("name", "You")
+                        msg.getTimestamp(),
+                        sharedPreferences.getString(Constants.SHARED_PREFERENCES_NAME, Constants.NOTIFICATION_MESSAGE_USER_NAME)
                 );
             }
 
@@ -145,7 +134,7 @@ public class NotificationHandler {
                 .setAutoCancel(true)
                 .addAction(replyAction);
 
-        if (message.getStatus() == Message.RECEIVED) {
+        if (message.getStatus() == Constants.MESSAGE_STATUS_RECEIVED) {
             builder.setPriority(NotificationCompat.PRIORITY_HIGH);
         } else {
             builder.setPriority(NotificationCompat.PRIORITY_MIN);

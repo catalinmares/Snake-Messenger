@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -13,9 +12,10 @@ import android.widget.Toast;
 
 import com.example.snakemessenger.MainActivity;
 import com.example.snakemessenger.R;
+import com.example.snakemessenger.general.Constants;
 
 public class SignInActivity extends AppCompatActivity {
-    private EditText phone, password;
+    private EditText password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,40 +25,21 @@ public class SignInActivity extends AppCompatActivity {
         Button signIn = findViewById(R.id.signin_button);
         TextView signUp = findViewById(R.id.signup_now);
 
-        phone = findViewById(R.id.phone);
         password = findViewById(R.id.password);
 
-        TextView reset = findViewById(R.id.password_reset2);
+        signIn.setOnClickListener(view -> {
+            String userPassword = password.getText().toString();
 
-        signIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String userPhone = phone.getText().toString();
-                String userPassword = password.getText().toString();
-
-                if (TextUtils.isEmpty(userPhone) || TextUtils.isEmpty(userPassword)) {
-                    Toast.makeText(SignInActivity.this, "All fields are required.", Toast.LENGTH_SHORT).show();
-                } else {
-                    signIn(userPhone, userPassword);
-                }
+            if (TextUtils.isEmpty(userPassword)) {
+                Toast.makeText(SignInActivity.this, Constants.TOAST_ALL_FIELDS_REQUIRED, Toast.LENGTH_SHORT).show();
+            } else {
+                signIn(userPassword);
             }
         });
 
-        signUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(SignInActivity.this, SignUpActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        reset.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String userPhone = phone.getText().toString();
-
-//                TODO - handle password reset logic
-            }
+        signUp.setOnClickListener(view -> {
+            Intent intent = new Intent(SignInActivity.this, SignUpActivity.class);
+            startActivity(intent);
         });
     }
 
@@ -69,20 +50,19 @@ public class SignInActivity extends AppCompatActivity {
         finish();
     }
 
-    public void signIn(String phone, String password) {
+    public void signIn(String password) {
         SharedPreferences loginPreferences =
-                getApplicationContext().getSharedPreferences("LOGIN_DETAILS", MODE_PRIVATE);
+                getApplicationContext().getSharedPreferences(Constants.SHARED_PREFERENCES, MODE_PRIVATE);
 
-        String loginPhone = loginPreferences.getString("phone", "");
-        String loginPassword = loginPreferences.getString("password", "");
+        String loginPassword = loginPreferences.getString(Constants.SHARED_PREFERENCES_PASSWORD, "");
 
-        if (phone.equals(loginPhone) && password.equals(loginPassword)) {
+        if (password.equals(loginPassword)) {
             SharedPreferences.Editor editor = loginPreferences.edit();
-            editor.putBoolean("signedIn", true);
+            editor.putBoolean(Constants.SHARED_PREFERENCES_SIGNED_IN, true);
             editor.apply();
             sendUserToMainActivity();
         } else {
-            Toast.makeText(SignInActivity.this, "Invalid credentials", Toast.LENGTH_SHORT).show();
+            Toast.makeText(SignInActivity.this, Constants.TOAST_INVALID_CREDENTIALS, Toast.LENGTH_SHORT).show();
         }
     }
 }

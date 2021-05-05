@@ -6,14 +6,4 @@
         android:title="Edit contact"
         android:id="@+id/chat_edit_option"
         app:showAsAction="never"/>
-
-    <item
-        android:title="Block contact"
-        android:id="@+id/chat_block_option"
-        app:showAsAction="never"/>
-
-    <item
-        android:title="Delete messages"
-        android:id="@+id/chat_delete_option"
-        app:showAsAction="never"/>
 </menu>

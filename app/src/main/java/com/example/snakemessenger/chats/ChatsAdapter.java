@@ -8,19 +8,22 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.example.snakemessenger.general.Constants;
 import com.example.snakemessenger.managers.DateManager;
-import com.example.snakemessenger.MainActivity;
-import com.example.snakemessenger.database.Contact;
+import com.example.snakemessenger.models.Contact;
 import com.example.snakemessenger.R;
-import com.example.snakemessenger.database.Message;
+import com.example.snakemessenger.models.Message;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import static com.example.snakemessenger.MainActivity.db;
+import static com.example.snakemessenger.MainActivity.myDeviceId;
+
 class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
-    private Context context;
+    private final Context context;
     private List<Contact> chats;
 
     public ChatsAdapter(Context context, List<Contact> chats) {
@@ -41,41 +44,34 @@ class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
     public void onBindViewHolder(@NonNull final ChatItemViewHolder holder, int position) {
         Contact currentChatContact = chats.get(position);
 
-        holder.getUserProfileName().setText(currentChatContact.getName());
+        holder.getUserProfileNameTextView().setText(currentChatContact.getName());
 
         if (currentChatContact.getPhotoUri() != null) {
             Uri imageUri = Uri.parse(currentChatContact.getPhotoUri());
-            Glide.with(context).load(imageUri).into(holder.getUserProfilePic());
+            Glide.with(context).load(imageUri).into(holder.getUserProfilePictureImageView());
         }
-
-        holder.getUserProfilePic().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
 
         if (currentChatContact.isConnected()) {
-            holder.getUserStatus().setVisibility(View.VISIBLE);
+            holder.getUserStatusImageView().setVisibility(View.VISIBLE);
         } else {
-            holder.getUserStatus().setVisibility(View.GONE);
+            holder.getUserStatusImageView().setVisibility(View.GONE);
         }
 
-        Message lastMessage = MainActivity.db.getMessageDao().getLastMessage(currentChatContact.getPhone());
+        Message lastMessage = db.getMessageDao().getLastMessage(myDeviceId, currentChatContact.getDeviceID());
         String messageContent = lastMessage.getContent();
 
-        if (lastMessage.getStatus() == Message.RECEIVED) {
-            holder.getLastMessage().setText(messageContent);
+        if (lastMessage.getStatus() == Constants.MESSAGE_STATUS_RECEIVED) {
+            holder.getLastMessageTextView().setText(messageContent);
         } else {
-            holder.getLastMessage().setText(String.format("You: %s", messageContent));
+            holder.getLastMessageTextView().setText(String.format("You: %s", messageContent));
         }
 
-        Date date = lastMessage.getTimestamp();
-        SimpleDateFormat ft = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US);
+        Date date = new Date(lastMessage.getTimestamp());
+        SimpleDateFormat ft = new SimpleDateFormat(Constants.DATE_TIME_FORMAT, Locale.US);
 
         Date currentDate = Calendar.getInstance().getTime();
 
-        holder.getTimestamp().setText(String.format("~ %s", DateManager.getLastMessageDate(ft.format(currentDate), ft.format(date))));
+        holder.getTimestampTextView().setText(String.format("~ %s", DateManager.getLastMessageDate(ft.format(currentDate), ft.format(date))));
     }
 
     @Override

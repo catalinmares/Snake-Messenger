@@ -3,7 +3,6 @@ package com.example.snakemessenger.chats;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
@@ -14,45 +13,45 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.example.snakemessenger.MainActivity;
 import com.example.snakemessenger.R;
 import com.example.snakemessenger.RecyclerTouchListener;
 import com.example.snakemessenger.RecyclerViewClickListener;
-import com.example.snakemessenger.database.Contact;
-import com.example.snakemessenger.database.Message;
-import com.google.android.gms.nearby.Nearby;
-import com.google.android.gms.nearby.connection.Payload;
+import com.example.snakemessenger.models.Contact;
+import com.example.snakemessenger.general.Constants;
+import com.example.snakemessenger.managers.CommunicationManager;
+import com.example.snakemessenger.models.ContactWrapper;
+
+import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
-
 import hani.momanii.supernova_emoji_library.Actions.EmojIconActions;
 import hani.momanii.supernova_emoji_library.Helper.EmojiconEditText;
+
+import static com.example.snakemessenger.MainActivity.db;
 
 public class SendMessageActivity extends AppCompatActivity {
     public static final String TAG = SendMessageActivity.class.getSimpleName();
 
-    private TextView mTitle;
-    private EditText mSearchEdit;
-    private ImageView mSearchButton;
+    private TextView titleTextView;
+    private EditText searchEditText;
+    private ImageView searchButton;
 
-    private TextView mSelectedContacts;
-    private CheckBox mSelectAll;
-    private TextView mNoContacts;
+    private TextView selectedContactsTextView;
+    private CheckBox selectAllCheckbox;
+    private TextView noContactsTextView;
 
-    private RecyclerView mRecyclerView;
-    private CustomContactsAdapter mContactsAdapter;
+    private RecyclerView recyclerView;
+    private CustomContactsAdapter contactsAdapter;
     private List<ContactWrapper> contactWrappers;
 
     private View rootView;
     private ImageView emojiImageView;
-    private EmojiconEditText mMessageContent;
+    private EmojiconEditText messageContentEditText;
 
     private List<String> selectedContacts;
     private boolean isSearchButtonPressed;
@@ -76,31 +75,28 @@ public class SendMessageActivity extends AppCompatActivity {
         initializeViews();
         initializeRecyclerView();
 
-        EmojIconActions emojIconActions = new EmojIconActions(this, rootView, mMessageContent, emojiImageView);
+        EmojIconActions emojIconActions = new EmojIconActions(this, rootView, messageContentEditText, emojiImageView);
         emojIconActions.ShowEmojIcon();
         emojIconActions.setIconsIds(R.drawable.ic_baseline_keyboard_24, R.drawable.ic_baseline_emoji_emotions_24);
 
-        MainActivity.db.getContactDao().getAllContacts().observe(this, new Observer<List<Contact>>() {
-            @Override
-            public void onChanged(List<Contact> contacts) {
-                List<ContactWrapper> changedContactWrappers = new ArrayList<>();
+        db.getContactDao().getAllContacts().observe(this, contacts -> {
+            List<ContactWrapper> changedContactWrappers = new ArrayList<>();
 
-                for (Contact contact : contacts) {
-                    boolean selected = isContactSelected(contact);
+            for (Contact contact : contacts) {
+                boolean selected = isContactSelected(contact);
 
-                    if (!selected) {
-                        changedContactWrappers.add(new ContactWrapper(contact, false));
-                    } else {
-                        changedContactWrappers.add(new ContactWrapper(contact, true));
-                    }
+                if (!selected) {
+                    changedContactWrappers.add(new ContactWrapper(contact, false));
+                } else {
+                    changedContactWrappers.add(new ContactWrapper(contact, true));
                 }
-
-                contactWrappers = changedContactWrappers;
-                initializeContactsList(contactWrappers);
             }
+
+            contactWrappers = changedContactWrappers;
+            initializeContactsList(contactWrappers);
         });
 
-        List<Contact> contacts = MainActivity.db.getContactDao().getContacts();
+        List<Contact> contacts = db.getContactDao().getContacts();
         contactWrappers = new ArrayList<>();
 
         for (Contact contact : contacts) {
@@ -117,10 +113,10 @@ public class SendMessageActivity extends AppCompatActivity {
         if (isSearchButtonPressed) {
             Log.d(TAG, "onBackPressed: user was searching a custom contact. Reset toolbar to default state");
 
-            mSearchEdit.setText("");
-            mSearchEdit.setVisibility(View.GONE);
-            mTitle.setVisibility(View.VISIBLE);
-            mSearchButton.setVisibility(View.VISIBLE);
+            searchEditText.setText("");
+            searchEditText.setVisibility(View.GONE);
+            titleTextView.setVisibility(View.VISIBLE);
+            searchButton.setVisibility(View.VISIBLE);
 
             isSearchButtonPressed = false;
         } else if (multipleSelection) {
@@ -129,8 +125,8 @@ public class SendMessageActivity extends AppCompatActivity {
             multipleSelection = false;
 
             selectedContacts.clear();
-            mSelectedContacts.setText("No contacts selected.");
-            mSelectAll.setChecked(false);
+            selectedContactsTextView.setText(R.string.no_contacts_selected);
+            selectAllCheckbox.setChecked(false);
         } else {
             Log.d(TAG, "onBackPressed: leaving activity...");
             super.onBackPressed();
@@ -141,11 +137,11 @@ public class SendMessageActivity extends AppCompatActivity {
         Toolbar mToolbar = findViewById(R.id.send_message_bar_layout);
         setSupportActionBar(mToolbar);
 
-        mTitle = mToolbar.findViewById(R.id.title);
+        titleTextView = mToolbar.findViewById(R.id.title);
 
-        mSearchEdit = mToolbar.findViewById(R.id.search_edit_text);
-        mSearchEdit.setVisibility(View.GONE);
-        mSearchEdit.addTextChangedListener(new TextWatcher() {
+        searchEditText = mToolbar.findViewById(R.id.search_edit_text);
+        searchEditText.setVisibility(View.GONE);
+        searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -153,13 +149,9 @@ public class SendMessageActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
+                String requestedName = charSequence.toString();
 
-            @Override
-            public void afterTextChanged(Editable editable) {
-                String requestedName = editable.toString();
-
-                Log.d(TAG, "afterTextChanged: edit text changed content to " + requestedName);
+                Log.d(TAG, "onTextChanged: edit text changed content to " + requestedName);
 
                 List<Contact> contacts;
                 List<ContactWrapper> newContactWrappers = new ArrayList<>();
@@ -167,29 +159,29 @@ public class SendMessageActivity extends AppCompatActivity {
                 if (!requestedName.equals("")) {
                     String formattedName = formatNameRequest(requestedName);
 
-                    Log.d(TAG, "afterTextChanged: user requested custom name " + formattedName);
+                    Log.d(TAG, "onTextChanged: user requested custom name " + formattedName);
 
-                    contacts = MainActivity.db.getContactDao().getMatchingContacts("%" + formattedName + "%");
+                    contacts = db.getContactDao().getMatchingContacts("%" + formattedName + "%");
 
                 } else {
-                    Log.d(TAG, "afterTextChanged: user removed edit text content");
+                    Log.d(TAG, "onTextChanged: user removed edit text content");
 
-                    contacts = MainActivity.db.getContactDao().getContacts();
+                    contacts = db.getContactDao().getContacts();
                 }
 
-                Log.d(TAG, "afterTextChanged: request matched " + contacts.size() + " contacts");
+                Log.d(TAG, "onTextChanged: request matched " + contacts.size() + " contacts");
 
                 for (Contact contact : contacts) {
-                    Log.d(TAG, "afterTextChanged: parsing contact " + contact.getName());
+                    Log.d(TAG, "onTextChanged: parsing contact " + contact.getName());
 
                     boolean selected = isContactSelected(contact);
 
                     if (!selected) {
-                        Log.d(TAG, "afterTextChanged: no previous selection found for " + contact.getName());
+                        Log.d(TAG, "onTextChanged: no previous selection found for " + contact.getName());
 
                         newContactWrappers.add(new ContactWrapper(contact, false));
                     } else {
-                        Log.d(TAG, "afterTextChanged: " + contact.getName() + " was previously selected");
+                        Log.d(TAG, "onTextChanged: " + contact.getName() + " was previously selected");
 
                         newContactWrappers.add(new ContactWrapper(contact, true));
                     }
@@ -198,29 +190,25 @@ public class SendMessageActivity extends AppCompatActivity {
                 contactWrappers = newContactWrappers;
                 initializeContactsList(contactWrappers);
             }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
         });
 
-        mSearchButton = mToolbar.findViewById(R.id.search_btn);
-        mSearchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG, "onClick: search button clicked");
+        searchButton = mToolbar.findViewById(R.id.search_btn);
+        searchButton.setOnClickListener(view -> {
+            Log.d(TAG, "onClick: search button clicked");
 
-                isSearchButtonPressed = true;
+            isSearchButtonPressed = true;
 
-                mTitle.setVisibility(View.GONE);
-                mSearchEdit.setVisibility(View.VISIBLE);
-                mSearchButton.setVisibility(View.GONE);
-            }
+            titleTextView.setVisibility(View.GONE);
+            searchEditText.setVisibility(View.VISIBLE);
+            searchButton.setVisibility(View.GONE);
         });
 
         ImageView mBackButton = mToolbar.findViewById(R.id.back_btn);
-        mBackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onBackPressed();
-            }
-        });
+        mBackButton.setOnClickListener(view -> onBackPressed());
 
         Log.d(TAG, "initializeToolbar: initialized toolbar");
     }
@@ -230,111 +218,105 @@ public class SendMessageActivity extends AppCompatActivity {
 
         emojiImageView = findViewById(R.id.pick_emoji_btn);
 
-        mSelectedContacts = findViewById(R.id.selected_contacts);
+        selectedContactsTextView = findViewById(R.id.selected_contacts);
 
-        mSelectAll = findViewById(R.id.select_all);
-        mSelectAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                List<Contact> contacts;
-                List<ContactWrapper> newContactWrappers = new ArrayList<>();
+        selectAllCheckbox = findViewById(R.id.select_all);
+        selectAllCheckbox.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+            List<Contact> contacts;
+            List<ContactWrapper> newContactWrappers = new ArrayList<>();
 
-                if (isChecked) {
-                    Log.d(TAG, "onCheckedChanged: checkbox was checked");
+            if (isChecked) {
+                Log.d(TAG, "onCheckedChanged: checkbox was checked");
 
-                    contacts = MainActivity.db.getContactDao().getContacts();
+                contacts = db.getContactDao().getContacts();
 
-                    if (!selected) {
-                        selectedContacts.clear();
+                if (!selected) {
+                    selectedContacts.clear();
 
-                        for (Contact contact : contacts) {
-                            selectedContacts.add(contact.getPhone());
-                        }
-
-                        mSearchEdit.setText("");
-                        mSearchEdit.setVisibility(View.GONE);
-                        mTitle.setVisibility(View.VISIBLE);
-                        mSearchButton.setVisibility(View.VISIBLE);
-
-                        isSearchButtonPressed = false;
+                    for (Contact contact : contacts) {
+                        selectedContacts.add(contact.getDeviceID());
                     }
 
-                    selected = false;
-                    multipleSelection = true;
-                } else {
-                    Log.d(TAG, "onCheckedChanged: checkbox was unchecked");
+                    searchEditText.setText("");
+                    searchEditText.setVisibility(View.GONE);
+                    titleTextView.setVisibility(View.VISIBLE);
+                    searchButton.setVisibility(View.VISIBLE);
 
-                    if (!unselected) {
-                        selectedContacts.clear();
-                        multipleSelection = false;
-                    }
+                    isSearchButtonPressed = false;
+                }
 
-                    if (isSearchButtonPressed) {
-                        Log.d(TAG, "onCheckedChanged: edit text is active");
+                selected = false;
+                multipleSelection = true;
+            } else {
+                Log.d(TAG, "onCheckedChanged: checkbox was unchecked");
 
-                        String requestedName = mSearchEdit.getText().toString();
+                if (!unselected) {
+                    selectedContacts.clear();
+                    multipleSelection = false;
+                }
 
-                        if (!requestedName.equals("")) {
-                            Log.d(TAG, "onCheckedChanged: user requested custom name");
+                if (isSearchButtonPressed) {
+                    Log.d(TAG, "onCheckedChanged: edit text is active");
 
-                            String formattedName = formatNameRequest(requestedName);
+                    String requestedName = searchEditText.getText().toString();
 
-                            contacts = MainActivity.db.getContactDao().getMatchingContacts("%" + formattedName + "%");
-                        } else {
-                            Log.d(TAG, "onCheckedChanged: user did not search for anything");
-                            contacts = MainActivity.db.getContactDao().getContacts();
-                        }
+                    if (!requestedName.equals("")) {
+                        Log.d(TAG, "onCheckedChanged: user requested custom name");
+
+                        String formattedName = formatNameRequest(requestedName);
+
+                        contacts = db.getContactDao().getMatchingContacts("%" + formattedName + "%");
                     } else {
-                        Log.d(TAG, "onCheckedChanged: edit text is not active");
-
-                        contacts = MainActivity.db.getContactDao().getContacts();
+                        Log.d(TAG, "onCheckedChanged: user did not search for anything");
+                        contacts = db.getContactDao().getContacts();
                     }
-                }
-
-                unselected = false;
-
-                if (selectedContacts.isEmpty()) {
-                    mSelectedContacts.setText("No contacts selected.");
-                } else if (selectedContacts.size() == 1) {
-                    mSelectedContacts.setText(selectedContacts.size() + " contact selected.");
                 } else {
-                    mSelectedContacts.setText(selectedContacts.size() + " contacts selected.");
-                }
+                    Log.d(TAG, "onCheckedChanged: edit text is not active");
 
-                for (Contact contact : contacts) {
-                    newContactWrappers.add(new ContactWrapper(contact, isChecked));
+                    contacts = db.getContactDao().getContacts();
                 }
-
-                contactWrappers = newContactWrappers;
-                initializeContactsList(contactWrappers);
             }
+
+            unselected = false;
+
+            if (selectedContacts.isEmpty()) {
+                selectedContactsTextView.setText(R.string.no_contacts_selected);
+            } else if (selectedContacts.size() == 1) {
+                selectedContactsTextView.setText(MessageFormat.format("{0} contact selected.", selectedContacts.size()));
+            } else {
+                selectedContactsTextView.setText(MessageFormat.format("{0} contacts selected.", selectedContacts.size()));
+            }
+
+            for (Contact contact : contacts) {
+                newContactWrappers.add(new ContactWrapper(contact, isChecked));
+            }
+
+            contactWrappers = newContactWrappers;
+            initializeContactsList(contactWrappers);
         });
 
-        mNoContacts = findViewById(R.id.no_contacts);
-        mMessageContent = findViewById(R.id.input_message);
+        noContactsTextView = findViewById(R.id.no_contacts);
+        messageContentEditText = findViewById(R.id.input_message);
 
-        ImageView mSendMessage = findViewById(R.id.send_message_btn);
-        mSendMessage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (selectedContacts.isEmpty()) {
-                    Toast.makeText(
-                            SendMessageActivity.this,
-                            "Please select at least one contact!",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                } else {
-                    String message = mMessageContent.getText().toString();
-                    broadcastMessage(message);
+        ImageView sendMessageButton = findViewById(R.id.send_message_btn);
+        sendMessageButton.setOnClickListener(view -> {
+            if (selectedContacts.isEmpty()) {
+                Toast.makeText(
+                        SendMessageActivity.this,
+                        Constants.TOAST_SELECT_AT_LEAST_ONE_CONTACT,
+                        Toast.LENGTH_SHORT
+                ).show();
+            } else {
+                String message = messageContentEditText.getText().toString();
+                broadcastMessage(message);
 
-                    Toast.makeText(
-                            SendMessageActivity.this,
-                            "Message sent.",
-                            Toast.LENGTH_SHORT
-                    ).show();
+                Toast.makeText(
+                        SendMessageActivity.this,
+                        Constants.TOAST_MESSAGE_SENT,
+                        Toast.LENGTH_SHORT
+                ).show();
 
-                    mMessageContent.setText("");
-                }
+                messageContentEditText.setText("");
             }
         });
 
@@ -342,14 +324,14 @@ public class SendMessageActivity extends AppCompatActivity {
     }
 
     private void initializeRecyclerView() {
-        mRecyclerView = findViewById(R.id.send_message_recycler_view);
+        recyclerView = findViewById(R.id.send_message_recycler_view);
 
         RecyclerView.LayoutManager layoutManager =
                 new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        mRecyclerView.setLayoutManager(layoutManager);
+        recyclerView.setLayoutManager(layoutManager);
 
-        mRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(this,
-                mRecyclerView, new RecyclerViewClickListener() {
+        recyclerView.addOnItemTouchListener(new RecyclerTouchListener(this,
+                recyclerView, new RecyclerViewClickListener() {
             @Override
             public void onClick(View view, int position) {
                 ContactWrapper contactWrapper = contactWrappers.get(position);
@@ -376,19 +358,19 @@ public class SendMessageActivity extends AppCompatActivity {
                     contactWrapper.setSelected(false);
                     removeSelectedContact(contactWrapper.getContact());
 
-                    if (mSelectAll.isChecked()) {
+                    if (selectAllCheckbox.isChecked()) {
                         unselected = true;
-                        mSelectAll.setChecked(false);
+                        selectAllCheckbox.setChecked(false);
                     }
                 } else {
                     Log.d(TAG, "onLongClick: contact was not selected previously. Selecting...");
 
                     contactWrapper.setSelected(true);
-                    selectedContacts.add(contactWrapper.getContact().getPhone());
+                    selectedContacts.add(contactWrapper.getContact().getDeviceID());
 
                     if (selectedContacts.size() == contactWrappers.size()) {
                         selected = true;
-                        mSelectAll.setChecked(true);
+                        selectAllCheckbox.setChecked(true);
                     }
                 }
 
@@ -397,22 +379,22 @@ public class SendMessageActivity extends AppCompatActivity {
 
                     multipleSelection = false;
 
-                    mSelectedContacts.setText("No contacts selected.");
+                    selectedContactsTextView.setText(R.string.no_contacts_selected);
                 } else {
                     multipleSelection = true;
 
                     if (selectedContacts.size() == 1) {
                         Log.d(TAG, "onLongClick: there is 1 contact selected");
 
-                        mSelectedContacts.setText(selectedContacts.size() + " contact selected.");
+                        selectedContactsTextView.setText(MessageFormat.format("{0} contact selected.", selectedContacts.size()));
                     } else {
                         Log.d(TAG, "onLongClick: there are " + selectedContacts.size() + " contacts selected");
 
-                        mSelectedContacts.setText(selectedContacts.size() + " contacts selected.");
+                        selectedContactsTextView.setText(MessageFormat.format("{0} contacts selected.", selectedContacts.size()));
                     }
                 }
 
-                mContactsAdapter.notifyItemChanged(position);
+                contactsAdapter.notifyItemChanged(position);
             }
         }));
 
@@ -420,13 +402,13 @@ public class SendMessageActivity extends AppCompatActivity {
     }
 
     private void initializeContactsList(List<ContactWrapper> contactWrappers) {
-        mContactsAdapter = new CustomContactsAdapter(this, contactWrappers);
-        mRecyclerView.setAdapter(mContactsAdapter);
+        contactsAdapter = new CustomContactsAdapter(this, contactWrappers);
+        recyclerView.setAdapter(contactsAdapter);
 
         if (contactWrappers.size() == 0) {
-            mNoContacts.setVisibility(View.VISIBLE);
+            noContactsTextView.setVisibility(View.VISIBLE);
         } else {
-            mNoContacts.setVisibility(View.GONE);
+            noContactsTextView.setVisibility(View.GONE);
         }
     }
 
@@ -434,9 +416,9 @@ public class SendMessageActivity extends AppCompatActivity {
         Iterator<String> it = selectedContacts.iterator();
 
         while (it.hasNext()) {
-            String currentContactPhone = it.next();
+            String currentContactDeviceId = it.next();
 
-            if (currentContactPhone.equals(contact.getPhone())) {
+            if (currentContactDeviceId.equals(contact.getDeviceID())) {
                 it.remove();
             }
         }
@@ -444,7 +426,7 @@ public class SendMessageActivity extends AppCompatActivity {
 
     private boolean isContactSelected(Contact contact) {
         for (String selectedContact : selectedContacts) {
-            if (selectedContact.equals(contact.getPhone())) {
+            if (selectedContact.equals(contact.getDeviceID())) {
                 return true;
             }
         }
@@ -469,39 +451,14 @@ public class SendMessageActivity extends AppCompatActivity {
         Log.d(TAG, "sendUserToPrivateChat: sending user to private chat with device named " + contact.getName());
 
         Intent chatIntent = new Intent(SendMessageActivity.this, ChatActivity.class);
-        chatIntent.putExtra("phone", contact.getPhone());
+        chatIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
         startActivity(chatIntent);
     }
 
     private void broadcastMessage(String message) {
-        for (String contactPhone : selectedContacts) {
-            Contact contact = MainActivity.db.getContactDao().findByPhone(contactPhone);
-            Payload messagePayload = Payload.fromBytes(message.getBytes());
-            Nearby.getConnectionsClient(getApplicationContext()).sendPayload(contact.getEndpointID(), messagePayload);
-
-            saveMessageInfoToDatabase(contact, messagePayload, message);
-        }
-    }
-
-    private void saveMessageInfoToDatabase(Contact contact, Payload payload, String message) {
-        MainActivity.db.getMessageDao().addMessage(new Message(
-                0,
-                payload.getId(),
-                payload.getType(),
-                contact.getPhone(),
-                message,
-                Calendar.getInstance().getTime(),
-                Message.SENT
-        ));
-
-        Log.d(TAG, "saveMessageInfoToDatabase: saved message for " + contact.getName() + " to Room");
-
-        if (!contact.isChat()) {
-            contact.setChat(true);
-
-            MainActivity.db.getContactDao().updateContact(contact);
-
-            Log.d(TAG, "saveMessageInfoToDatabase: user is a new chat contact");
+        for (String contactDeviceId : selectedContacts) {
+            Contact contact = db.getContactDao().findByDeviceId(contactDeviceId);
+            CommunicationManager.buildAndDeliverMessage(getApplicationContext(), message, contact);
         }
     }
 }

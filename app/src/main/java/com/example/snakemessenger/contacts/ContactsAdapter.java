@@ -10,18 +10,18 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.snakemessenger.general.Constants;
 import com.example.snakemessenger.managers.DateManager;
 import com.example.snakemessenger.R;
-import com.example.snakemessenger.database.Contact;
+import com.example.snakemessenger.models.Contact;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class ContactsAdapter extends RecyclerView.Adapter<ContactsViewHolder> {
-    private Context context;
+    private final Context context;
     private List<Contact> contacts;
 
     public ContactsAdapter(Context context, List<Contact> contacts) {
@@ -42,34 +42,34 @@ public class ContactsAdapter extends RecyclerView.Adapter<ContactsViewHolder> {
     public void onBindViewHolder(@NonNull final ContactsViewHolder holder, int position) {
         Contact currentContact = contacts.get(position);
 
-        holder.getContactName().setText(currentContact.getName());
+        holder.getContactNameTextView().setText(currentContact.getName());
 
         if (currentContact.isConnected()) {
-            holder.getContactStatus().setText(R.string.active_now);
-            holder.getStatus().setVisibility(View.VISIBLE);
+            holder.getContactStatusTextView().setText(R.string.active_now);
+            holder.getStatusImageView().setVisibility(View.VISIBLE);
         } else {
-            Date currentTime = Calendar.getInstance().getTime();
-            SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US);
+            Date currentTime = new Date(System.currentTimeMillis());
+            SimpleDateFormat df = new SimpleDateFormat(Constants.DATE_TIME_FORMAT, Locale.US);
 
-            holder.getContactStatus().setText(
+            holder.getContactStatusTextView().setText(
                     String.format(
                             "Last seen %s",
                             DateManager.getLastActiveText(
                                     df.format(currentTime),
-                                    currentContact.getLastActive()
+                                    df.format(new Date(currentContact.getLastActive()))
                             )
                     )
             );
 
-            holder.getStatus().setVisibility(View.GONE);
+            holder.getStatusImageView().setVisibility(View.GONE);
         }
 
         if (currentContact.getPhotoUri() != null) {
             Uri imageUri = Uri.parse(currentContact.getPhotoUri());
-            Glide.with(context).load(imageUri).into(holder.getProfilePic());
+            Glide.with(context).load(imageUri).into(holder.getProfilePictureImageView());
         }
 
-        holder.getTimestamp().setVisibility(View.GONE);
+        holder.getTimestampTextView().setVisibility(View.GONE);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.example.snakemessenger.database;
+package com.example.snakemessenger.models;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -13,8 +13,8 @@ public class Contact {
     @ColumnInfo(name = "name")
     private String name;
 
-    @ColumnInfo(name = "phone")
-    private String phone;
+    @ColumnInfo(name = "deviceID")
+    private String deviceID;
 
     @ColumnInfo(name = "endpointID")
     private String endpointID;
@@ -23,7 +23,7 @@ public class Contact {
     private boolean connected;
 
     @ColumnInfo(name = "last_active")
-    private String lastActive;
+    private long lastActive;
 
     @ColumnInfo(name = "description")
     private String description;
@@ -33,6 +33,9 @@ public class Contact {
 
     @ColumnInfo(name = "chat")
     private boolean chat;
+
+    @ColumnInfo(name = "last_message_timestamp")
+    private long lastMessageTimestamp;
 
     @ColumnInfo(name = "saved")
     private boolean saved;
@@ -44,17 +47,18 @@ public class Contact {
     public Contact() {
     }
 
-    public Contact(int id, String name, String phone, String endpointID, boolean connected, String lastActive,
-                   String description, String photoUri, boolean chat, boolean saved, boolean nearby) {
+    public Contact(int id, String name, String deviceID, String endpointID, boolean connected, long lastActive,
+                   String description, String photoUri, boolean chat, long lastMessageTimestamp, boolean saved, boolean nearby) {
         this.id = id;
         this.name = name;
-        this.phone = phone;
+        this.deviceID = deviceID;
         this.endpointID = endpointID;
         this.connected = connected;
         this.lastActive = lastActive;
         this.description = description;
         this.photoUri = photoUri;
         this.chat = chat;
+        this.lastMessageTimestamp = lastMessageTimestamp;
         this.saved = saved;
         this.nearby = nearby;
     }
@@ -75,12 +79,8 @@ public class Contact {
         this.name = name;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
+    public String getDeviceID() {
+        return deviceID;
     }
 
     public String getEndpointID() {
@@ -99,11 +99,11 @@ public class Contact {
         this.connected = connected;
     }
 
-    public String getLastActive() {
+    public long getLastActive() {
         return lastActive;
     }
 
-    public void setLastActive(String lastActive) {
+    public void setLastActive(long lastActive) {
         this.lastActive = lastActive;
     }
 
@@ -129,6 +129,14 @@ public class Contact {
 
     public void setChat(boolean chat) {
         this.chat = chat;
+    }
+
+    public long getLastMessageTimestamp() {
+        return lastMessageTimestamp;
+    }
+
+    public void setLastMessageTimestamp(long lastMessageTimestamp) {
+        this.lastMessageTimestamp = lastMessageTimestamp;
     }
 
     public boolean isSaved() {

@@ -10,39 +10,39 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import hani.momanii.supernova_emoji_library.Helper.EmojiconTextView;
 
 class ChatOtherViewHolder extends RecyclerView.ViewHolder {
-    private CircleImageView mSenderProfilePicture;
-    private TextView mSenderName;
-    private EmojiconTextView mMessageContent;
-    private TextView mTimestamp;
-    private ImageView mMessageStatus;
+    private final CircleImageView senderProfilePictureImageView;
+    private final TextView senderNameTextView;
+    private final EmojiconTextView messageContentTextView;
+    private final TextView timestampTextView;
+    private final ImageView messageStatusImageView;
 
     public ChatOtherViewHolder(@NonNull View itemView) {
         super(itemView);
 
-        mSenderProfilePicture = itemView.findViewById(R.id.sender_profile_pic);
-        mSenderName = itemView.findViewById(R.id.sender_name);
-        mMessageContent = itemView.findViewById(R.id.message_content);
-        mTimestamp = itemView.findViewById(R.id.message_timestamp);
-        mMessageStatus = itemView.findViewById(R.id.message_status);
+        senderProfilePictureImageView = itemView.findViewById(R.id.sender_profile_pic);
+        senderNameTextView = itemView.findViewById(R.id.sender_name);
+        messageContentTextView = itemView.findViewById(R.id.message_content);
+        timestampTextView = itemView.findViewById(R.id.message_timestamp);
+        messageStatusImageView = itemView.findViewById(R.id.message_status);
     }
 
-    public CircleImageView getSenderProfilePicture() {
-        return mSenderProfilePicture;
+    public CircleImageView getSenderProfilePictureImageView() {
+        return senderProfilePictureImageView;
     }
 
-    public TextView getSenderName() {
-        return mSenderName;
+    public TextView getSenderNameTextView() {
+        return senderNameTextView;
     }
 
-    public EmojiconTextView getMessageContent() {
-        return mMessageContent;
+    public EmojiconTextView getMessageContentTextView() {
+        return messageContentTextView;
     }
 
-    public TextView getTimestamp() {
-        return mTimestamp;
+    public TextView getTimestampTextView() {
+        return timestampTextView;
     }
 
-    public ImageView getMessageStatus() {
-        return mMessageStatus;
+    public ImageView getMessageStatusImageView() {
+        return messageStatusImageView;
     }
 }

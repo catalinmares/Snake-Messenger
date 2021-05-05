@@ -16,6 +16,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.snakemessenger.authentication.SignInActivity;
+import com.example.snakemessenger.general.Constants;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -59,9 +60,9 @@ public class LauncherActivity extends AppCompatActivity {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                SharedPreferences loginPreferences = getApplicationContext().getSharedPreferences("LOGIN_DETAILS", MODE_PRIVATE);
+                SharedPreferences loginPreferences = getApplicationContext().getSharedPreferences(Constants.SHARED_PREFERENCES, MODE_PRIVATE);
 
-                boolean signedIn = loginPreferences.getBoolean("signedIn", false);
+                boolean signedIn = loginPreferences.getBoolean(Constants.SHARED_PREFERENCES_SIGNED_IN, false);
 
                 if (!signedIn) {
                     Log.d(TAG, "onCreate: user is not signed in. Sending him to login activity...");
@@ -95,7 +96,7 @@ public class LauncherActivity extends AppCompatActivity {
 
         for (int grantResult : grantResults) {
             if (grantResult == PackageManager.PERMISSION_DENIED) {
-                Toast.makeText(this, "Missing permissions", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, Constants.TOAST_MISSING_PERMISSIONS, Toast.LENGTH_LONG).show();
                 finish();
                 return;
             }
@@ -109,7 +110,6 @@ public class LauncherActivity extends AppCompatActivity {
         Intent loginIntent = new Intent(LauncherActivity.this, SignInActivity.class);
         loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(loginIntent);
-        finish();
     }
 
     private void sendUserToMainActivity() {
@@ -117,6 +117,5 @@ public class LauncherActivity extends AppCompatActivity {
         Intent mainIntent = new Intent(LauncherActivity.this, MainActivity.class);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(mainIntent);
-        finish();
     }
 }
