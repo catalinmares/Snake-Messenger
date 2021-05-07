@@ -183,17 +183,17 @@ public class CommunicationManager {
 
                     Log.d(TAG, "sendMessagesForRouting: sending messages for contact with device ID " + contactDeviceId);
 
-                    List<Message> dataMemoryForContact = db.getMessageDao().getDataMemory(myDeviceId, contactDeviceId);
-                    Log.d(TAG, "sendMessagesForRouting: sending " + dataMemoryForContact.size() + " data memory messages.");
-
-                    for (Message message : dataMemoryForContact) {
-                        deliverMessage(context, message, contact);
-                    }
-
                     List<Message> ownMessagesForContact = db.getMessageDao().getOwnMessages(myDeviceId, contactDeviceId);
                     Log.d(TAG, "sendMessagesForRouting: sending " + ownMessagesForContact.size() + " own messages");
 
                     for (Message message : ownMessagesForContact) {
+                        deliverMessage(context, message, contact);
+                    }
+
+                    List<Message> dataMemoryForContact = db.getMessageDao().getDataMemory(myDeviceId, contactDeviceId);
+                    Log.d(TAG, "sendMessagesForRouting: sending " + dataMemoryForContact.size() + " data memory messages.");
+
+                    for (Message message : dataMemoryForContact) {
                         deliverMessage(context, message, contact);
                     }
                 }

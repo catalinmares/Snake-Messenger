@@ -214,10 +214,6 @@ public class SignUpActivity extends AppCompatActivity {
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-//        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-//            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-//        }
-
         try {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         } catch (Exception e) {
@@ -227,10 +223,6 @@ public class SignUpActivity extends AppCompatActivity {
 
     private void dispatchPickPictureIntent() {
         Intent pickPictureIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-
-//        if (pickPictureIntent.resolveActivity(getPackageManager()) != null) {
-//            startActivityForResult(pickPictureIntent, REQUEST_ACCESS_GALLERY);
-//        }
 
         try {
             startActivityForResult(pickPictureIntent, REQUEST_ACCESS_GALLERY);

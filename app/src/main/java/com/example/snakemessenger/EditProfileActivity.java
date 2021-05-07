@@ -38,6 +38,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
     private SharedPreferences loginPreferences;
     private Uri imageUri = null;
+    private boolean customPicture = false;
 
     private Contact contact = null;
 
@@ -80,7 +81,9 @@ public class EditProfileActivity extends AppCompatActivity {
                     editor.putString(Constants.SHARED_PREFERENCES_STATUS, userDescription);
                 }
 
-                editor.putString(Constants.SHARED_PREFERENCES_PHOTO_URI, imageUri.toString());
+                if (customPicture) {
+                    editor.putString(Constants.SHARED_PREFERENCES_PHOTO_URI, imageUri.toString());
+                }
 
                 if (ok) {
                     Toast.makeText(EditProfileActivity.this, Constants.TOAST_PROFILE_UPDATED, Toast.LENGTH_SHORT).show();
@@ -103,7 +106,9 @@ public class EditProfileActivity extends AppCompatActivity {
                     contact.setDescription(userDescription);
                 }
 
-                contact.setPhotoUri(imageUri.toString());
+                if (customPicture) {
+                    contact.setPhotoUri(imageUri.toString());
+                }
 
                 if (ok) {
                     Toast.makeText(
@@ -125,6 +130,8 @@ public class EditProfileActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            customPicture = true;
+
             Bundle extras = data.getExtras();
             assert extras != null;
 
@@ -139,6 +146,8 @@ public class EditProfileActivity extends AppCompatActivity {
 
             imageUri = Uri.parse(path);
         } else if (requestCode == REQUEST_ACCESS_GALLERY && resultCode == RESULT_OK) {
+            customPicture = true;
+
             imageUri = data.getData();
 
             try {
@@ -253,10 +262,6 @@ public class EditProfileActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-//        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-//            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-//        }
     }
 
     private void dispatchPickPictureIntent() {
@@ -267,9 +272,5 @@ public class EditProfileActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-//        if (pickPictureIntent.resolveActivity(getPackageManager()) != null) {
-//            startActivityForResult(pickPictureIntent, REQUEST_ACCESS_GALLERY);
-//        }
     }
 }
