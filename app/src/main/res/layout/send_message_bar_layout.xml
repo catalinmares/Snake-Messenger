@@ -34,7 +34,7 @@
             android:layout_toEndOf="@+id/back_btn"
             android:layout_marginStart="10dp"
             android:layout_centerVertical="true"
-            android:text="Select contacts"
+            android:text="@string/select_contacts"
             style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"/>
 
         <EditText
@@ -43,7 +43,7 @@
             android:layout_height="match_parent"
             android:layout_toEndOf="@id/back_btn"
             android:layout_marginStart="10dp"
-            android:hint="Type a name..."
+            android:hint="@string/type_a_name"
             android:inputType="textPersonName"/>
 
         <ImageView

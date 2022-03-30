@@ -58,7 +58,15 @@ class ChatsAdapter extends RecyclerView.Adapter<ChatItemViewHolder> {
         }
 
         Message lastMessage = db.getMessageDao().getLastMessage(myDeviceId, currentChatContact.getDeviceID());
-        String messageContent = lastMessage.getContent();
+
+        String messageContent;
+
+        if (lastMessage.getContentType() == Constants.CONTENT_IMAGE) {
+            messageContent = "Sent a photo";
+        } else {
+            messageContent = lastMessage.getContent();
+        }
+
 
         if (lastMessage.getStatus() == Constants.MESSAGE_STATUS_RECEIVED) {
             holder.getLastMessageTextView().setText(messageContent);

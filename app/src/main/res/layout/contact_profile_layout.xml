@@ -13,7 +13,7 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:textColor="@color/colorWhite"
-        android:text="X"
+        android:text="@string/x"
         android:textStyle="bold"
         android:layout_gravity="end"
         android:gravity="center"

@@ -44,4 +44,26 @@
     <string name="confirm_password">Confirm password</string>
     <string name="password">Password</string>
     <string name="name">Name</string>
+    <string name="no_nearby_users_found">No nearby users found.</string>
+    <string name="type_a_message">Type a message...</string>
+    <string name="username">Username</string>
+    <string name="advertising_id">Advertising ID</string>
+    <string name="user_status">User status</string>
+    <string name="update_profile">Update profile</string>
+    <string name="snake_messenger">Snake Messenger</string>
+    <string name="sign_in">Sign In</string>
+    <string name="new_to_the_app">New to the app?</string>
+    <string name="sign_up_now">Sign up now</string>
+    <string name="select_all">Select all</string>
+    <string name="no_contacts_found">No contacts found.</string>
+    <string name="activity_title">Activity title</string>
+    <string name="chat_contact_name">Contact name</string>
+    <string name="timestamp">Timestamp</string>
+    <string name="message_content">Message content</string>
+    <string name="available_now">Available now</string>
+    <string name="x">X</string>
+    <string name="no_active_conversations">You have no active conversations.</string>
+    <string name="contacts_list_empty">Your contacts list is empty.</string>
+    <string name="select_contacts">Select contacts</string>
+    <string name="type_a_name">Type a name...</string>
 </resources>

@@ -32,7 +32,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import static com.example.snakemessenger.MainActivity.db;
 
 public class AddContactActivity extends AppCompatActivity {
-    public static final String TAG = AddContactActivity.class.getSimpleName();
+    public static final String TAG = "[AddContactActivity]";
 
     private Dialog userProfileDialog;
     private CircleImageView userProfilePictureImageView;

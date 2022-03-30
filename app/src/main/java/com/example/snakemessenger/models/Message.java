@@ -26,8 +26,14 @@ class Message {
     @ColumnInfo(name = "destination")
     private String destination;
 
+    @ColumnInfo(name = "contentType")
+    private int contentType;
+
     @ColumnInfo(name = "content")
     private String content;
+
+    @ColumnInfo(name = "totalSize")
+    private long totalSize;
 
     @ColumnInfo(name = "timestamp")
     private long timestamp;
@@ -42,14 +48,16 @@ class Message {
     public Message() {
     }
 
-    public Message(int id, String messageId, long payloadId, int type, String source, String destination, String content, long timestamp, int timesSent, int status) {
+    public Message(int id, String messageId, long payloadId, int type, String source, String destination, int contentType, String content, long totalSize, long timestamp, int timesSent, int status) {
         this.id = id;
         this.messageId = messageId;
         this.payloadId = payloadId;
         this.type = type;
         this.source = source;
         this.destination = destination;
+        this.contentType = contentType;
         this.content = content;
+        this.totalSize = totalSize;
         this.timestamp = timestamp;
         this.timesSent = timesSent;
         this.status = status;
@@ -99,12 +107,28 @@ class Message {
         this.destination = destination;
     }
 
+    public int getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(int contentType) {
+        this.contentType = contentType;
+    }
+
     public String getContent() {
         return content;
     }
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public long getTotalSize() {
+        return totalSize;
+    }
+
+    public void setTotalSize(long totalSize) {
+        this.totalSize = totalSize;
     }
 
     public long getTimestamp() {

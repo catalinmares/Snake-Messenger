@@ -1,6 +1,5 @@
 package com.example.snakemessenger;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -30,29 +29,14 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-    public static final String TAG = "MainActivity";
-
-    public static String currentChat = null;
-
-    public static Map<Integer, List<Message>> notificationMessages = new HashMap<>();
-
-    public static AppDatabase db;
+    public static final String TAG = "[MainActivity]";
 
     private SharedPreferences loginPreferences;
-
-    private static final String[] REQUIRED_PERMISSIONS =
-            new String[] {
-                    Manifest.permission.BLUETOOTH,
-                    Manifest.permission.BLUETOOTH_ADMIN,
-                    Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.CHANGE_WIFI_STATE,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-            };
-
-    private static final int REQUEST_CODE_REQUIRED_PERMISSIONS = 1;
+    public static AppDatabase db;
 
     public static String myDeviceId;
+    public static String currentChat = null;
+    public static Map<Integer, List<Message>> notificationMessages = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,16 +86,14 @@ public class MainActivity extends AppCompatActivity {
 
         tabLayoutMediator.attach();
 
-        if (!hasPermissions(this, REQUIRED_PERMISSIONS)) {
+        if (!hasPermissions(this, Constants.REQUIRED_PERMISSIONS)) {
             Log.d(TAG, "onCreate: app does not have all the required permissions. Requesting permissions...");
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                ActivityCompat.requestPermissions(
-                        this,
-                        REQUIRED_PERMISSIONS,
-                        REQUEST_CODE_REQUIRED_PERMISSIONS
-                );
-            }
+            ActivityCompat.requestPermissions(
+                    this,
+                    Constants.REQUIRED_PERMISSIONS,
+                    Constants.REQUEST_PERMISSIONS
+            );
         }
     }
 
@@ -131,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode != REQUEST_CODE_REQUIRED_PERMISSIONS) {
+        if (requestCode != Constants.REQUEST_PERMISSIONS) {
             return;
         }
 

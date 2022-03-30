@@ -2,9 +2,6 @@ package com.example.snakemessenger.authentication;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.Manifest;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -21,14 +18,13 @@ import android.widget.Toast;
 
 import com.example.snakemessenger.R;
 import com.example.snakemessenger.general.Constants;
+import com.example.snakemessenger.general.Utilities;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class SignUpActivity extends AppCompatActivity {
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private static final int REQUEST_ACCESS_GALLERY = 2;
 
     private CircleImageView profilePictureImageView;
     private EditText nameEditText, passwordEditText, confirmPasswordEditText;
@@ -36,8 +32,8 @@ public class SignUpActivity extends AppCompatActivity {
     private Uri imageUri;
     private boolean customPicture;
 
-    String model;
-    String androidId;
+    private String model;
+    private String androidId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +50,7 @@ public class SignUpActivity extends AppCompatActivity {
         passwordEditText = findViewById(R.id.password);
         confirmPasswordEditText = findViewById(R.id.password_confirm);
 
-        profilePictureImageView.setOnClickListener(view -> showImagePickDialog());
+        profilePictureImageView.setOnClickListener(view -> Utilities.showImagePickDialog(SignUpActivity.this));
 
         signUp.setOnClickListener(view -> {
             String userName = nameEditText.getText().toString();
@@ -89,46 +85,6 @@ public class SignUpActivity extends AppCompatActivity {
         });
     }
 
-    private void showImagePickDialog() {
-        String[] options = {Constants.OPTION_CAMERA, Constants.OPTION_GALLERY};
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(Constants.PICK_PROFILE_PICTURE_TEXT)
-                .setItems(options, (dialogInterface, i) -> {
-                    switch (i) {
-                        case 0:
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                if (checkSelfPermission(Manifest.permission.CAMERA) ==
-                                        PackageManager.PERMISSION_DENIED) {
-                                    String[] permission = {Manifest.permission.CAMERA};
-
-                                    requestPermissions(permission, REQUEST_IMAGE_CAPTURE);
-                                } else {
-                                    dispatchTakePictureIntent();
-                                }
-                            } else {
-                                dispatchTakePictureIntent();
-                            }
-
-                            break;
-
-                        case 1:
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                                        PackageManager.PERMISSION_DENIED) {
-                                    String[] permission = {Manifest.permission.READ_EXTERNAL_STORAGE};
-
-                                    requestPermissions(permission, REQUEST_ACCESS_GALLERY);
-                                } else {
-                                    dispatchPickPictureIntent();
-                                }
-                            } else {
-                                dispatchPickPictureIntent();
-                            }
-                    }
-                })
-                .show();
-    }
-
     private void createAccount(final String name, final String password) {
         SharedPreferences loginPreferences =
                 getApplicationContext().getSharedPreferences(Constants.SHARED_PREFERENCES, MODE_PRIVATE);
@@ -161,7 +117,7 @@ public class SignUpActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+        if (requestCode == Constants.REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             customPicture = true;
 
             Bundle extras = data.getExtras();
@@ -177,7 +133,7 @@ public class SignUpActivity extends AppCompatActivity {
             String path = MediaStore.Images.Media.insertImage(this.getContentResolver(), imageBitmap, "Title", null);
 
             imageUri = Uri.parse(path);
-        } else if (requestCode == REQUEST_ACCESS_GALLERY && resultCode == RESULT_OK) {
+        } else if (requestCode == Constants.REQUEST_ACCESS_GALLERY && resultCode == RESULT_OK) {
             customPicture = true;
 
             imageUri = data.getData();
@@ -194,40 +150,20 @@ public class SignUpActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE) {
+        if (requestCode == Constants.REQUEST_IMAGE_CAPTURE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                dispatchTakePictureIntent();
+                Utilities.dispatchTakePictureIntent(SignUpActivity.this);
             } else {
                 Toast.makeText(SignUpActivity.this, Constants.TOAST_PERMISSION_DENIED, Toast.LENGTH_SHORT).show();
             }
-        } else if (requestCode == REQUEST_ACCESS_GALLERY) {
+        } else if (requestCode == Constants.REQUEST_ACCESS_GALLERY) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                dispatchPickPictureIntent();
+                Utilities.dispatchPickPictureIntent(SignUpActivity.this);
             } else {
                 Toast.makeText(SignUpActivity.this, Constants.TOAST_PERMISSION_DENIED, Toast.LENGTH_SHORT).show();
             }
-        }
-    }
-
-    private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-        try {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void dispatchPickPictureIntent() {
-        Intent pickPictureIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-
-        try {
-            startActivityForResult(pickPictureIntent, REQUEST_ACCESS_GALLERY);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

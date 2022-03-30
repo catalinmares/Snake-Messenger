@@ -33,7 +33,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import static com.example.snakemessenger.MainActivity.db;
 
 public class ContactsFragment extends Fragment {
-    public static final String TAG = "ContactsFragment";
+    public static final String TAG = "[ContactsFragment]";
 
     private MainActivity mainActivity;
 

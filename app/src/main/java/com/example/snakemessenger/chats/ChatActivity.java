@@ -1,14 +1,13 @@
 package com.example.snakemessenger.chats;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,6 +23,7 @@ import android.widget.Toast;
 
 import com.example.snakemessenger.EditProfileActivity;
 import com.example.snakemessenger.general.Constants;
+import com.example.snakemessenger.general.Utilities;
 import com.example.snakemessenger.managers.CommunicationManager;
 import com.example.snakemessenger.managers.DateManager;
 import com.example.snakemessenger.MainActivity;
@@ -46,8 +46,7 @@ import static com.example.snakemessenger.MainActivity.myDeviceId;
 import static com.example.snakemessenger.MainActivity.currentChat;
 
 public class ChatActivity extends AppCompatActivity {
-    public static final String TAG = ChatActivity.class.getSimpleName();
-    public static final int EDIT_PROFILE_REQUEST = 1;
+    public static final String TAG = "[ChatActivity]";
 
     private Contact contact;
     private boolean isContactConnected;
@@ -64,6 +63,8 @@ public class ChatActivity extends AppCompatActivity {
 
     private View rootView;
     private ImageView emojiImageView;
+
+    private String imagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -172,6 +173,42 @@ public class ChatActivity extends AppCompatActivity {
         Log.d(TAG, "initializeToolbar: initialized toolbar");
     }
 
+    private void initializeViews() {
+        rootView = findViewById(R.id.root_view);
+
+        ImageView cameraImageView = findViewById(R.id.pick_picture_btn);
+        cameraImageView.setOnClickListener(v -> Utilities.showImagePickDialog(ChatActivity.this));
+        emojiImageView = findViewById(R.id.pick_emoji_btn);
+
+        userMessageInput = findViewById(R.id.input_message);
+
+        ImageView sendMessageButton = findViewById(R.id.send_message_btn);
+        sendMessageButton.setOnClickListener(view -> {
+            String message = userMessageInput.getText().toString();
+
+            if (!TextUtils.isEmpty(message)) {
+                if (message.getBytes().length > ConnectionsClient.MAX_BYTES_DATA_SIZE) {
+                    Toast.makeText(ChatActivity.this, Constants.TOAST_MESSAGE_TOO_LONG, Toast.LENGTH_SHORT).show();
+                } else {
+                    new Thread(() -> CommunicationManager.buildAndDeliverMessage(getApplicationContext(), message, contact)).start();
+                    userMessageInput.setText("");
+                }
+            }
+        });
+
+        Log.d(TAG, "initializeViews: initialized views");
+    }
+
+    private void initializeRecyclerView() {
+        messagesRecyclerView = findViewById(R.id.chat_recycler_view);
+
+        RecyclerView.LayoutManager layoutManager =
+                new LinearLayoutManager(ChatActivity.this, LinearLayoutManager.VERTICAL, false);
+        messagesRecyclerView.setLayoutManager(layoutManager);
+
+        Log.d(TAG, "initializeRecyclerView: initialized RecyclerView");
+    }
+
     private void updateUI(Contact contact) {
         contactName.setText(contact.getName());
 
@@ -218,56 +255,72 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    private void initializeViews() {
-        rootView = findViewById(R.id.root_view);
-
-        emojiImageView = findViewById(R.id.pick_emoji_btn);
-
-        userMessageInput = findViewById(R.id.input_message);
-
-        ImageView sendMessageButton = findViewById(R.id.send_message_btn);
-        sendMessageButton.setOnClickListener(view -> {
-            String message = userMessageInput.getText().toString();
-
-            if (!TextUtils.isEmpty(message)) {
-                if (message.getBytes().length > ConnectionsClient.MAX_BYTES_DATA_SIZE) {
-                    Toast.makeText(ChatActivity.this, Constants.TOAST_MESSAGE_TOO_LONG, Toast.LENGTH_SHORT).show();
-                } else {
-                    CommunicationManager.buildAndDeliverMessage(getApplicationContext(), message, contact);
-                    userMessageInput.setText("");
-                }
-            }
-        });
-
-        Log.d(TAG, "initializeViews: initialized views");
-    }
-
-    private void initializeRecyclerView() {
-        messagesRecyclerView = findViewById(R.id.chat_recycler_view);
-
-        RecyclerView.LayoutManager layoutManager =
-                new LinearLayoutManager(ChatActivity.this, LinearLayoutManager.VERTICAL, false);
-        messagesRecyclerView.setLayoutManager(layoutManager);
-
-        Log.d(TAG, "initializeRecyclerView: initialized RecyclerView");
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == EDIT_PROFILE_REQUEST && resultCode == Activity.RESULT_OK) {
-            contact = db.getContactDao().findByDeviceId(contact.getDeviceID());
-            chatAdapter.setContact(contact);
-            updateUI(contact);
-        }
-    }
-
     private void sendUserToEditProfileActivity(Contact contact) {
         Log.d(TAG, "sendUserToSettingActivity: starting edit contact activity...");
 
         Intent editContactIntent = new Intent(ChatActivity.this, EditProfileActivity.class);
         editContactIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
-        startActivityForResult(editContactIntent, EDIT_PROFILE_REQUEST);
+        startActivityForResult(editContactIntent, Constants.REQUEST_EDIT_PROFILE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == Constants.REQUEST_EDIT_PROFILE && resultCode == Activity.RESULT_OK) {
+            contact = db.getContactDao().findByDeviceId(contact.getDeviceID());
+            chatAdapter.setContact(contact);
+            updateUI(contact);
+        } else if (requestCode == Constants.REQUEST_PREVIEW_PICTURE && resultCode == Activity.RESULT_OK) {
+            new Thread(() -> {
+                CommunicationManager.buildAndDeliverImageMessage(getApplicationContext(), PreviewPictureActivity.imageBitmap, imagePath, contact);
+                PreviewPictureActivity.imageBitmap = null;
+                imagePath = null;
+            }).start();
+            Toast.makeText(ChatActivity.this, "Picture sent!", Toast.LENGTH_SHORT).show();
+        } else if (requestCode == Constants.REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+
+            if (extras != null) {
+                PreviewPictureActivity.imageBitmap = (Bitmap) extras.get(Constants.EXTRA_IMAGE_CAPTURE_DATA);
+
+                Intent previewPictureIntent = new Intent(ChatActivity.this, PreviewPictureActivity.class);
+                startActivityForResult(previewPictureIntent, Constants.REQUEST_PREVIEW_PICTURE);
+            }
+        } else if (requestCode == Constants.REQUEST_ACCESS_GALLERY && resultCode == RESULT_OK) {
+            Uri imageUri = data.getData();
+
+            if (imageUri != null) {
+                imagePath = imageUri.toString();
+            }
+
+            try {
+                PreviewPictureActivity.imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+            } catch (IOException exception) {
+                exception.printStackTrace();
+            }
+
+            Intent previewPictureIntent = new Intent(ChatActivity.this, PreviewPictureActivity.class);
+            startActivityForResult(previewPictureIntent, Constants.REQUEST_PREVIEW_PICTURE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == Constants.REQUEST_IMAGE_CAPTURE) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Utilities.dispatchTakePictureIntent(ChatActivity.this);
+            } else {
+                Toast.makeText(ChatActivity.this, Constants.TOAST_PERMISSION_DENIED, Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == Constants.REQUEST_ACCESS_GALLERY) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Utilities.dispatchPickPictureIntent(ChatActivity.this);
+            } else {
+                Toast.makeText(ChatActivity.this, Constants.TOAST_PERMISSION_DENIED, Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

@@ -4,13 +4,10 @@ import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -22,35 +19,21 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class LauncherActivity extends AppCompatActivity {
-    public static final String TAG = LauncherActivity.class.getSimpleName();
-
-    private static final String[] REQUIRED_PERMISSIONS =
-            new String[] {
-                    Manifest.permission.BLUETOOTH,
-                    Manifest.permission.BLUETOOTH_ADMIN,
-                    Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.CHANGE_WIFI_STATE,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-            };
-
-    private static final int REQUEST_CODE_REQUIRED_PERMISSIONS = 100;
+    public static final String TAG = "[LauncherActivity]";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launcher);
 
-        if (!hasPermissions(this, REQUIRED_PERMISSIONS)) {
+        if (!hasPermissions(this, Constants.REQUIRED_PERMISSIONS)) {
             Log.d(TAG, "onCreate: app does not have all the required permissions. Requesting permissions...");
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                ActivityCompat.requestPermissions(
-                        this,
-                        REQUIRED_PERMISSIONS,
-                        REQUEST_CODE_REQUIRED_PERMISSIONS
-                );
-            }
+            ActivityCompat.requestPermissions(
+                    this,
+                    Constants.REQUIRED_PERMISSIONS,
+                    Constants.REQUEST_PERMISSIONS
+            );
         } else {
             enterApplication();
         }
@@ -90,7 +73,7 @@ public class LauncherActivity extends AppCompatActivity {
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode != REQUEST_CODE_REQUIRED_PERMISSIONS) {
+        if (requestCode != Constants.REQUEST_PERMISSIONS) {
             return;
         }
 

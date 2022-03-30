@@ -25,7 +25,7 @@ import java.util.List;
 import static com.example.snakemessenger.MainActivity.db;
 
 public class ChatsFragment extends Fragment {
-    public static final String TAG = "ChatsFragment";
+    public static final String TAG = "[ChatsFragment]";
 
     private View chatsFragmentView;
 

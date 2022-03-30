@@ -59,27 +59,15 @@ public class NotificationHandler {
         Intent replyIntent;
         PendingIntent replyPendingIntent;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            replyIntent = new Intent(context, NotificationReceiver.class);
-            replyIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
-            replyIntent.putExtra(Constants.EXTRA_NOTIFICATION_ID, contact.getId());
-            replyPendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    contact.getId(),
-                    replyIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT
-            );
-        } else {
-            replyIntent = new Intent(context, ChatActivity.class);
-            replyIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            replyIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
-            replyPendingIntent = PendingIntent.getActivity(
-                    context,
-                    contact.getId(),
-                    replyIntent,
-                    PendingIntent.FLAG_CANCEL_CURRENT
-            );
-        }
+        replyIntent = new Intent(context, NotificationReceiver.class);
+        replyIntent.putExtra(Constants.EXTRA_CONTACT_DEVICE_ID, contact.getDeviceID());
+        replyIntent.putExtra(Constants.EXTRA_NOTIFICATION_ID, contact.getId());
+        replyPendingIntent = PendingIntent.getBroadcast(
+                context,
+                contact.getId(),
+                replyIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
 
         RemoteInput remoteInput = new RemoteInput.Builder(Constants.REMOTE_INPUT_RESULT_KEY)
                 .setLabel(Constants.REMOTE_INPUT_LABEL_TEXT)
@@ -108,18 +96,36 @@ public class NotificationHandler {
             if (msg.getStatus() == Constants.MESSAGE_STATUS_RECEIVED) {
                 Contact sender = db.getContactDao().findByDeviceId(msg.getSource());
 
-                notificationMessage = new NotificationCompat.MessagingStyle.Message(
-                        msg.getContent(),
-                        msg.getTimestamp(),
-                        sender.getName()
-                );
+                if (msg.getContentType() == Constants.CONTENT_IMAGE) {
+                    notificationMessage = new NotificationCompat.MessagingStyle.Message(
+                            "Sent a photo",
+                            msg.getTimestamp(),
+                            sender.getName()
+                    );
+                } else {
+                    notificationMessage = new NotificationCompat.MessagingStyle.Message(
+                            msg.getContent(),
+                            msg.getTimestamp(),
+                            sender.getName()
+                    );
+                }
+
             } else {
                 SharedPreferences sharedPreferences = context.getSharedPreferences(Constants.SHARED_PREFERENCES, MODE_PRIVATE);
-                notificationMessage = new NotificationCompat.MessagingStyle.Message(
-                        msg.getContent(),
-                        msg.getTimestamp(),
-                        sharedPreferences.getString(Constants.SHARED_PREFERENCES_NAME, Constants.NOTIFICATION_MESSAGE_USER_NAME)
-                );
+
+                if (msg.getContentType() == Constants.CONTENT_IMAGE) {
+                    notificationMessage = new NotificationCompat.MessagingStyle.Message(
+                            "Sent a photo",
+                            msg.getTimestamp(),
+                            sharedPreferences.getString(Constants.SHARED_PREFERENCES_NAME, Constants.NOTIFICATION_MESSAGE_USER_NAME)
+                    );
+                } else {
+                    notificationMessage = new NotificationCompat.MessagingStyle.Message(
+                            msg.getContent(),
+                            msg.getTimestamp(),
+                            sharedPreferences.getString(Constants.SHARED_PREFERENCES_NAME, Constants.NOTIFICATION_MESSAGE_USER_NAME)
+                    );
+                }
             }
 
             messagingStyle.addMessage(notificationMessage);

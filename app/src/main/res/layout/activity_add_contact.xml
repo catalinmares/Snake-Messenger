@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".contacts.AddContactActivity"
     android:background="@color/colorPrimaryDark">
 
@@ -30,7 +29,7 @@
         android:id="@+id/no_devices"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="No nearby users found."
+        android:text="@string/no_nearby_users_found"
         android:textSize="24sp"
         android:textColor="@color/colorText"
         android:textAlignment="center"

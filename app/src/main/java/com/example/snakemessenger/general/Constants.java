@@ -1,6 +1,6 @@
 package com.example.snakemessenger.general;
 
-import androidx.room.Ignore;
+import android.Manifest;
 
 import com.google.android.gms.nearby.connection.Strategy;
 
@@ -46,13 +46,11 @@ public interface Constants {
     String TOAST_SELECT_AT_LEAST_ONE_CONTACT = "Please select at least one contact!";
     String TOAST_MESSAGE_SENT = "Message sent";
     String TOAST_CONTACT_DELETED = "Contact deleted";
-    String TOAST_CONTACT_SAVED = "Contact saved";
     String TOAST_PROFILE_UPDATED = "Profile updated successfully";
     String TOAST_SIGNED_OUT = "Signed out";
 
     String EXTRA_IMAGE_CAPTURE_DATA = "data";
     String EXTRA_CONTACT_DEVICE_ID = "deviceId";
-    String EXTRA_CONTACT_NAME = "name";
     String EXTRA_NOTIFICATION_ID = "notificationId";
 
     String SERVICE_NOTIFICATION_CHANNEL = "Service";
@@ -68,7 +66,7 @@ public interface Constants {
     String OPTION_CAMERA = "Camera";
     String OPTION_GALLERY = "Gallery";
 
-    String PICK_PROFILE_PICTURE_TEXT = "Pick a profile picture";
+    String PICK_PICTURE_TEXT = "Pick an image source";
 
     String JSON_BATTERY_KEY = "battery";
     String JSON_CONTACTS_KEY = "contacts";
@@ -76,12 +74,33 @@ public interface Constants {
     String JSON_DEVICE_LAST_CONTACT_KEY = "lastActive";
 
     String JSON_MESSAGE_ID_KEY = "id";
+    String JSON_CONTENT_TYPE_KEY = "contentType";
     String JSON_MESSAGE_TYPE_KEY = "type";
     String JSON_SOURCE_DEVICE_ID_KEY = "source";
     String JSON_DESTINATION_DEVICE_ID_KEY = "destination";
     String JSON_MESSAGE_CONTENT_KEY = "content";
     String JSON_MESSAGE_TIMESTAMP_KEY = "timestamp";
     String JSON_MESSAGES_KEY = "messages";
+    String JSON_IMAGE_SIZE_KEY = "imageSize";
+    String JSON_IMAGE_PART_NO_KEY = "partNo";
+    String JSON_IMAGE_PART_SIZE_KEY = "partSize";
+    String JSON_MESSAGE_TOTAL_SIZE = "totalSize";
+
+    String[] REQUIRED_PERMISSIONS =
+            new String[] {
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.BLUETOOTH_ADMIN,
+                    Manifest.permission.ACCESS_WIFI_STATE,
+                    Manifest.permission.CHANGE_WIFI_STATE,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+            };
+
+    int REQUEST_IMAGE_CAPTURE = 111;
+    int REQUEST_ACCESS_GALLERY = 222;
+    int REQUEST_PREVIEW_PICTURE = 333;
+    int REQUEST_EDIT_PROFILE = 444;
+    int REQUEST_PERMISSIONS = 555;
 
     int MESSAGE_TYPE_HELLO = 0;
     int MESSAGE_TYPE_MESSAGE = 1;
@@ -92,5 +111,14 @@ public interface Constants {
     int MESSAGE_STATUS_RECEIVED = 2;
     int MESSAGE_STATUS_ROUTING = 3;
 
+    int CONTENT_TEXT = 0;
+    int CONTENT_IMAGE = 1;
+
     int MAX_SEND_TIMES = 10;
+    int MAX_IMAGE_SIZE = 25000;
+
+    int RECEIVED_TEXT_MESSAGE = 0;
+    int RECEIVED_IMAGE_MESSAGE = 1;
+    int SENT_TEXT_MESSAGE = 2;
+    int SENT_IMAGE_MESSAGE = 3;
 }

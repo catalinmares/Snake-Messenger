@@ -12,21 +12,23 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Base64;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.collection.SimpleArrayMap;
 import androidx.core.app.NotificationCompat;
-import androidx.room.Room;
-
 import com.example.snakemessenger.MainActivity;
 import com.example.snakemessenger.R;
-import com.example.snakemessenger.database.AppDatabase;
 import com.example.snakemessenger.general.Constants;
+import com.example.snakemessenger.general.Utilities;
 import com.example.snakemessenger.managers.CommunicationManager;
 import com.example.snakemessenger.models.Contact;
+import com.example.snakemessenger.models.ImageMessage;
+import com.example.snakemessenger.models.ImagePart;
 import com.example.snakemessenger.models.Message;
 import com.example.snakemessenger.notifications.NotificationHandler;
+import com.google.android.gms.common.util.IOUtils;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
@@ -39,9 +41,10 @@ import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
-
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +63,7 @@ public class BackgroundCommunicationService extends Service {
     public float batteryLevel;
 
     public static boolean running = false;
+    private Map<String, ImageMessage> incomingImageMessages;
 
     private final BatteryStatusReceiver batteryStatusReceiver = new BatteryStatusReceiver();
     private class BatteryStatusReceiver extends BroadcastReceiver {
@@ -202,8 +206,10 @@ public class BackgroundCommunicationService extends Service {
                         contact.setConnected(true);
                         db.getContactDao().updateContact(contact);
 
-                        CommunicationManager.deliverDirectMessages(getApplicationContext(), contact);
-                        CommunicationManager.sendDeviceInformation(getApplicationContext(), contact, batteryLevel);
+                        new Thread(() -> {
+                            CommunicationManager.deliverDirectMessages(getApplicationContext(), contact);
+                            CommunicationManager.sendDeviceInformation(getApplicationContext(), contact, batteryLevel);
+                        }).start();
                     } else if (result.getStatus().getStatusCode() == ConnectionsStatusCodes.STATUS_ERROR) {
                         Log.d(TAG, "onConnectionResult: couldn't establish a connection between devices");
                     }
@@ -226,12 +232,20 @@ public class BackgroundCommunicationService extends Service {
 
     private final PayloadCallback payloadCallback =
             new PayloadCallback() {
+        private final SimpleArrayMap<Long, Payload> incomingPayloads = new SimpleArrayMap<>();
+
                 @Override
                 public void onPayloadReceived(@NonNull String endpointId, @NonNull Payload payload) {
                     Contact contact = db.getContactDao().findById(endpointId);
-                    byte[] messageBytes = payload.asBytes();
 
                     Log.d(TAG, "onPayloadReceived: received a message from " + contact.getName());
+
+                    if (payload.getType() == Payload.Type.STREAM) {
+                        incomingPayloads.put(payload.getId(), payload);
+                        return;
+                    }
+
+                    byte[] messageBytes = payload.asBytes();
 
                     try {
                         JSONObject messageJSON = new JSONObject(new String(messageBytes));
@@ -242,7 +256,7 @@ public class BackgroundCommunicationService extends Service {
                             case Constants.MESSAGE_TYPE_HELLO:
                                 Log.d(TAG, "onPayloadReceived: the message's type is HELLO");
 
-                                CommunicationManager.sendMessagesForRouting(getApplicationContext(), messageJSON, contact);
+                                new Thread(() -> CommunicationManager.sendMessagesForRouting(getApplicationContext(), messageJSON, contact)).start();
                                 break;
                             case Constants.MESSAGE_TYPE_MESSAGE:
                                 Log.d(TAG, "onPayloadReceived: the message's type is MESSAGE");
@@ -259,15 +273,17 @@ public class BackgroundCommunicationService extends Service {
                                 if (destinationId.equals(myDeviceId)) {
                                     Log.d(TAG, "onPayloadReceived: the message is for the current device");
 
-                                    Message receivedMessage = CommunicationManager.saveOwnMessageToDatabase(messageJSON, contact, payload, Constants.MESSAGE_STATUS_RECEIVED);
+                                    Message receivedMessage = Utilities.saveOwnMessageToDatabase(messageJSON, payload.getId(), Constants.MESSAGE_STATUS_RECEIVED);
 
-                                    if (currentChat == null || !currentChat.equals(contact.getDeviceID())) {
-                                        NotificationHandler.sendMessageNotification(getApplicationContext(), contact, receivedMessage);
+                                    Contact sourceContact = db.getContactDao().findByDeviceId(messageJSON.getString(Constants.JSON_SOURCE_DEVICE_ID_KEY));
+
+                                    if (currentChat == null || !currentChat.equals(sourceContact.getDeviceID())) {
+                                        NotificationHandler.sendMessageNotification(getApplicationContext(), sourceContact, receivedMessage);
                                     }
                                 } else {
                                     Log.d(TAG, "onPayloadReceived: the message is routing to another device");
 
-                                    CommunicationManager.saveDataMemoryMessageToDatabase(messageJSON, payload, Constants.MESSAGE_STATUS_ROUTING);
+                                    Utilities.saveDataMemoryMessageToDatabase(messageJSON, payload.getId(), Constants.MESSAGE_STATUS_ROUTING);
                                 }
 
                                 break;
@@ -291,48 +307,146 @@ public class BackgroundCommunicationService extends Service {
                     Contact contact = db.getContactDao().findById(endpointId);
                     Message message = db.getMessageDao().getMessageByPayloadId(payloadId);
 
-                    Log.d(TAG, "onPayloadTransferUpdate: update about transfer with status " + payloadTransferUpdate.getStatus());
+                    switch (payloadTransferUpdate.getStatus()) {
+                        case PayloadTransferUpdate.Status.IN_PROGRESS:
+                            Log.d(TAG, "onPayloadTransferUpdate: transfer of payload " + payloadId + " is in progress");
+                            break;
+                        case PayloadTransferUpdate.Status.SUCCESS:
+                            Log.d(TAG, "onPayloadTransferUpdate: transfer of payload " + payloadId + " was SUCCESSFUL");
 
-                    if (payloadTransferUpdate.getStatus() == PayloadTransferUpdate.Status.SUCCESS &&
-                            message != null && message.getStatus() != Constants.MESSAGE_STATUS_RECEIVED) {
-                        message.setTimesSent(message.getTimesSent() + 1);
+                            Payload payload = incomingPayloads.get(payloadId);
 
-                        Log.d(TAG, "onPayloadTransferUpdate: increased times sent of message to " + message.getTimesSent());
+                            if (payload != null) {
+                                Log.d(TAG, "onPayloadTransferUpdate: received an image");
 
-                        if(message.getDestination().equals(contact.getDeviceID())) {
-                            Log.d(TAG, "onPayloadTransferUpdate: the message reached its destination");
+                                InputStream messageStream = payload.asStream().asInputStream();
+                                try {
+                                    byte[] messageBytes = IOUtils.toByteArray(messageStream);
+                                    JSONObject messageJSON = new JSONObject(new String(messageBytes));
 
-                            if (message.getSource().equals(myDeviceId)) {
-                                message.setStatus(Constants.MESSAGE_STATUS_DELIVERED);
-                                db.getMessageDao().updateMessage(message);
-                            } else {
-                                db.getMessageDao().deleteMessage(message);
+                                    Message dbMessage = db.getMessageDao().findByMessageId(messageJSON.getString(Constants.JSON_MESSAGE_ID_KEY));
+
+                                    if (dbMessage != null) {
+                                        Log.d(TAG, "onPayloadTransferUpdate: the received message is already in the local database");
+                                        break;
+                                    }
+
+                                    long imageSize = messageJSON.getLong(Constants.JSON_IMAGE_SIZE_KEY);
+
+                                    Log.d(TAG, "onPayloadTransferUpdate: the image's total size is " + imageSize);
+
+                                    if (imageSize > Constants.MAX_IMAGE_SIZE) {
+                                        Log.d(TAG, "onPayloadTransferUpdate: the image's size exceeds the maximum allowed size of one message!");
+
+                                        String messageId = messageJSON.getString(Constants.JSON_MESSAGE_ID_KEY);
+
+                                        int partNo = messageJSON.getInt(Constants.JSON_IMAGE_PART_NO_KEY);
+                                        int partSize = messageJSON.getInt(Constants.JSON_IMAGE_PART_SIZE_KEY);
+                                        String content = messageJSON.getString(Constants.JSON_MESSAGE_CONTENT_KEY);
+                                        byte[] contentBytes = Base64.decode(content, Base64.DEFAULT);
+
+                                        Log.d(TAG, "onPayloadTransferUpdate: received chunk with number " + partNo + " of size " + partSize);
+
+                                        ImagePart imagePart = new ImagePart(partNo, partSize, contentBytes);
+
+                                        if (!incomingImageMessages.containsKey(messageId)) {
+                                            Log.d(TAG, "onPayloadTransferUpdate: this is the first chunk received for this image");
+                                            ImageMessage imageMessage = new ImageMessage(
+                                                    messageId,
+                                                    messageJSON.getString(Constants.JSON_SOURCE_DEVICE_ID_KEY),
+                                                    messageJSON.getString(Constants.JSON_DESTINATION_DEVICE_ID_KEY),
+                                                    messageJSON.getLong(Constants.JSON_MESSAGE_TIMESTAMP_KEY),
+                                                    messageJSON.getInt(Constants.JSON_IMAGE_SIZE_KEY)
+                                            );
+
+                                            incomingImageMessages.put(messageId, imageMessage);
+                                        }
+
+                                        long chunkTimestamp = messageJSON.getLong(Constants.JSON_MESSAGE_TIMESTAMP_KEY);
+
+                                        insertImagePart(contact, messageId, imagePart, payload.getId(), chunkTimestamp);
+                                        break;
+                                    }
+                                } catch (IOException | JSONException e) {
+                                    Log.d(TAG, "onPayloadTransferUpdate: an error occurred while receiving the image payload: " + e.getMessage());
+                                    e.printStackTrace();
+                                }
+
+                                incomingPayloads.remove(payloadId);
+                            } else if (message != null && message.getStatus() != Constants.MESSAGE_STATUS_RECEIVED) {
+                                message.setTimesSent(message.getTimesSent() + 1);
+
+                                Log.d(TAG, "onPayloadTransferUpdate: increased times sent of message to " + message.getTimesSent());
+
+                                if(message.getDestination().equals(contact.getDeviceID())) {
+                                    Log.d(TAG, "onPayloadTransferUpdate: the message reached its destination");
+
+                                    if (message.getSource().equals(myDeviceId)) {
+                                        message.setStatus(Constants.MESSAGE_STATUS_DELIVERED);
+                                        db.getMessageDao().updateMessage(message);
+                                    } else {
+                                        db.getMessageDao().deleteMessage(message);
+                                    }
+                                } else if (message.getTimesSent() >= Constants.MAX_SEND_TIMES) {
+                                    Log.d(TAG, "onPayloadTransferUpdate: message reached max number of sends. No need to send anymore.");
+
+                                    if (message.getStatus() == Constants.MESSAGE_STATUS_SENT) {
+                                        Log.d(TAG, "onPayloadTransferUpdate: the message was generated by the current device. Marking it as delivered...");
+
+                                        message.setStatus(Constants.MESSAGE_STATUS_DELIVERED);
+                                        db.getMessageDao().updateMessage(message);
+                                    } else if (message.getStatus() == Constants.MESSAGE_STATUS_ROUTING) {
+                                        Log.d(TAG, "onPayloadTransferUpdate: the message was generated by another device. Deleting it...");
+
+                                        db.getMessageDao().deleteMessage(message);
+                                    }
+                                }
+
+                                Log.d(TAG, "onPayloadTransferUpdate: payload " + payloadId + " was delivered to its receiver");
                             }
-                        } else if (message.getTimesSent() >= Constants.MAX_SEND_TIMES) {
-                            Log.d(TAG, "onPayloadTransferUpdate: message reached max number of sends. No need to send anymore.");
 
-                            if (message.getStatus() == Constants.MESSAGE_STATUS_SENT) {
-                                Log.d(TAG, "onPayloadTransferUpdate: the message was generated by the current device. Marking it as delivered...");
-
-                                message.setStatus(Constants.MESSAGE_STATUS_DELIVERED);
-                                db.getMessageDao().updateMessage(message);
-                            } else if (message.getStatus() == Constants.MESSAGE_STATUS_ROUTING) {
-                                Log.d(TAG, "onPayloadTransferUpdate: the message was generated by another device. Deleting it...");
-
-                                db.getMessageDao().deleteMessage(message);
-                            }
-                        }
-
-                        Log.d(TAG, "onPayloadTransferUpdate: payload was delivered to its receiver");
+                            break;
+                        case PayloadTransferUpdate.Status.FAILURE:
+                            Log.d(TAG, "onPayloadTransferUpdate: transfer of payload " + payloadId + " has FAILED");
+                            break;
+                        case PayloadTransferUpdate.Status.CANCELED:
+                            Log.d(TAG, "onPayloadTransferUpdate: transfer of payload " + payloadId + " was CANCELED");
+                            break;
+                        default:
+                            Log.d(TAG, "onPayloadTransferUpdate: transfer of payload " + payloadId + " generated an UNKNOWN CODE");
                     }
                 }
             };
+
+    private void insertImagePart(Contact contact, String messageId, ImagePart imagePart, long payloadId, long timestamp) {
+        ImageMessage imageMessage = incomingImageMessages.get(messageId);
+
+        if (imageMessage != null && !imageMessage.getParts().contains(imagePart)) {
+            imageMessage.addPart(imagePart);
+            imageMessage.setPayloadId(payloadId);
+            imageMessage.setTimestamp(timestamp);
+
+            int currentSize = imageMessage.getCurrentSize();
+            int totalSize = imageMessage.getTotalSize();
+            Log.d(TAG, "insertImagePart: current size is " + currentSize);
+
+            if (currentSize == totalSize) {
+                Log.d(TAG, "insertImagePart: this chunk filled the image! Assembling and inserting it into the local storage...");
+
+                Utilities.saveImageToDatabase(this, contact, imageMessage);
+                incomingImageMessages.remove(messageId);
+            } else {
+                incomingImageMessages.put(messageId, imageMessage);
+            }
+        }
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         pendingConnectionsData = new HashMap<>();
+        incomingImageMessages = new HashMap<>();
         registerReceiver(batteryStatusReceiver, intentFilter);
 
         Log.d(TAG, "onCreate: service has been created");

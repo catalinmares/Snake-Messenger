@@ -1,13 +1,20 @@
 package com.example.snakemessenger.chats;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -20,11 +27,13 @@ import android.widget.Toast;
 import com.example.snakemessenger.R;
 import com.example.snakemessenger.RecyclerTouchListener;
 import com.example.snakemessenger.RecyclerViewClickListener;
+import com.example.snakemessenger.general.Utilities;
 import com.example.snakemessenger.models.Contact;
 import com.example.snakemessenger.general.Constants;
 import com.example.snakemessenger.managers.CommunicationManager;
 import com.example.snakemessenger.models.ContactWrapper;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -35,7 +44,7 @@ import hani.momanii.supernova_emoji_library.Helper.EmojiconEditText;
 import static com.example.snakemessenger.MainActivity.db;
 
 public class SendMessageActivity extends AppCompatActivity {
-    public static final String TAG = SendMessageActivity.class.getSimpleName();
+    public static final String TAG = "[SendMessageActivity]";
 
     private TextView titleTextView;
     private EditText searchEditText;
@@ -58,6 +67,8 @@ public class SendMessageActivity extends AppCompatActivity {
     private boolean multipleSelection;
     private boolean selected;
     private boolean unselected;
+
+    private String imagePath;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -216,6 +227,8 @@ public class SendMessageActivity extends AppCompatActivity {
     private void initializeViews() {
         rootView = findViewById(R.id.root_view);
 
+        ImageView cameraImageView = findViewById(R.id.pick_picture_btn);
+        cameraImageView.setOnClickListener(v -> Utilities.showImagePickDialog(SendMessageActivity.this));
         emojiImageView = findViewById(R.id.pick_emoji_btn);
 
         selectedContactsTextView = findViewById(R.id.selected_contacts);
@@ -308,7 +321,7 @@ public class SendMessageActivity extends AppCompatActivity {
                 ).show();
             } else {
                 String message = messageContentEditText.getText().toString();
-                broadcastMessage(message);
+                new Thread(() -> broadcastMessage(message)).start();
 
                 Toast.makeText(
                         SendMessageActivity.this,
@@ -459,6 +472,70 @@ public class SendMessageActivity extends AppCompatActivity {
         for (String contactDeviceId : selectedContacts) {
             Contact contact = db.getContactDao().findByDeviceId(contactDeviceId);
             CommunicationManager.buildAndDeliverMessage(getApplicationContext(), message, contact);
+        }
+    }
+
+    private void broadcastImageMessage(Bitmap imageBitmap) {
+        for (String contactDeviceId : selectedContacts) {
+            Contact contact = db.getContactDao().findByDeviceId(contactDeviceId);
+            CommunicationManager.buildAndDeliverImageMessage(getApplicationContext(), imageBitmap, imagePath, contact);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == Constants.REQUEST_PREVIEW_PICTURE && resultCode == Activity.RESULT_OK) {
+            new Thread(() -> {
+                broadcastImageMessage(PreviewPictureActivity.imageBitmap);
+                PreviewPictureActivity.imageBitmap = null;
+                imagePath = null;
+            }).start();
+            Toast.makeText(SendMessageActivity.this, "Picture sent!", Toast.LENGTH_SHORT).show();
+        } else if (requestCode == Constants.REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+
+            if (extras != null) {
+                PreviewPictureActivity.imageBitmap = (Bitmap) extras.get(Constants.EXTRA_IMAGE_CAPTURE_DATA);
+
+                Intent previewPictureIntent = new Intent(SendMessageActivity.this, PreviewPictureActivity.class);
+                startActivityForResult(previewPictureIntent, Constants.REQUEST_PREVIEW_PICTURE);
+            }
+        } else if (requestCode == Constants.REQUEST_ACCESS_GALLERY && resultCode == RESULT_OK) {
+            Uri imageUri = data.getData();
+
+            if (imageUri != null) {
+                imagePath = imageUri.toString();
+            }
+
+            try {
+                PreviewPictureActivity.imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+            } catch (IOException exception) {
+                exception.printStackTrace();
+            }
+
+            Intent previewPictureIntent = new Intent(SendMessageActivity.this, PreviewPictureActivity.class);
+            startActivityForResult(previewPictureIntent, Constants.REQUEST_PREVIEW_PICTURE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == Constants.REQUEST_IMAGE_CAPTURE) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Utilities.dispatchTakePictureIntent(SendMessageActivity.this);
+            } else {
+                Toast.makeText(SendMessageActivity.this, Constants.TOAST_PERMISSION_DENIED, Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == Constants.REQUEST_ACCESS_GALLERY) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Utilities.dispatchPickPictureIntent(SendMessageActivity.this);
+            } else {
+                Toast.makeText(SendMessageActivity.this, Constants.TOAST_PERMISSION_DENIED, Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }

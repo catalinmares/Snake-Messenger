@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBlack"
+    tools:context=".chats.PreviewPictureActivity">
+    <ImageView
+        android:id="@+id/picture_image_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/send_picture_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:layout_margin="@dimen/fab_margin"
+        app:fabSize="normal"
+        android:backgroundTint="@color/colorAccent"
+        android:elevation="6dp"
+        android:src="@drawable/ic_send_white_24dp"
+        app:tint="@color/colorWhite"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/cancel_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:layout_margin="@dimen/fab_margin"
+        app:fabSize="normal"
+        android:backgroundTint="@color/colorRed"
+        android:elevation="6dp"
+        android:src="@drawable/ic_baseline_cancel_schedule_send_24"
+        app:tint="@color/colorWhite"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"/>
+</RelativeLayout>

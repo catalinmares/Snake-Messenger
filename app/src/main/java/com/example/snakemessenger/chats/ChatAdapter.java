@@ -2,7 +2,10 @@ package com.example.snakemessenger.chats;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +18,8 @@ import com.example.snakemessenger.managers.DateManager;
 import com.example.snakemessenger.R;
 import com.example.snakemessenger.models.Contact;
 import com.example.snakemessenger.models.Message;
+
+import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -22,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static android.content.Context.MODE_PRIVATE;
+import static com.example.snakemessenger.chats.ChatActivity.TAG;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final Context context;
@@ -39,28 +45,46 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         Message message = messages.get(position);
 
         int status = message.getStatus();
+        int contentType = message.getContentType();
 
         if (status == Constants.MESSAGE_STATUS_RECEIVED) {
-            return 0;
-        }
+            if (contentType == Constants.CONTENT_TEXT) {
+                return Constants.RECEIVED_TEXT_MESSAGE;
+            }
 
-        return 1;
+            return Constants.RECEIVED_IMAGE_MESSAGE;
+        } else {
+            if (contentType == Constants.CONTENT_TEXT) {
+                return Constants.SENT_TEXT_MESSAGE;
+            }
+
+            return Constants.SENT_IMAGE_MESSAGE;
+        }
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        if (viewType == 0) {
-            View itemView = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.chat_message_item, parent, false);
+        View itemView;
 
-            return new ChatUserViewHolder(itemView);
+        switch (viewType) {
+            case Constants.SENT_TEXT_MESSAGE:
+                itemView = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.chat_sent_text_message, parent, false);
+                return new CurrentUserTextMessageViewHolder(itemView);
+            case Constants.SENT_IMAGE_MESSAGE:
+                itemView = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.chat_sent_image_message, parent, false);
+                return new CurrentUserImageMessageViewHolder(itemView);
+            case Constants.RECEIVED_TEXT_MESSAGE:
+                itemView = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.chat_received_text_message, parent, false);
+                return new OtherUserTextMessageViewHolder(itemView);
+            default:
+                itemView = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.chat_received_image_message, parent, false);
+                return new OtherUserImageMessageViewHolder(itemView);
         }
-
-        View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.chat_message_item2, parent, false);
-
-        return new ChatOtherViewHolder(itemView);
     }
 
     @Override
@@ -73,46 +97,113 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         Date currentDate = Calendar.getInstance().getTime();
 
-        switch (getItemViewType(position)) {
-            case 0:
-                ChatUserViewHolder mHolder = (ChatUserViewHolder) holder;
+        int viewType = getItemViewType(position);
+
+        switch (viewType) {
+            case Constants.SENT_TEXT_MESSAGE:
+                CurrentUserTextMessageViewHolder stHolder = (CurrentUserTextMessageViewHolder) holder;
+
+                SharedPreferences stSharedPreferences = context.getSharedPreferences(Constants.SHARED_PREFERENCES, MODE_PRIVATE);
+
+                String stName = stSharedPreferences.getString(Constants.SHARED_PREFERENCES_NAME, "");
+                String stPhotoUri = stSharedPreferences.getString(Constants.SHARED_PREFERENCES_PHOTO_URI, null);
+
+                if (stPhotoUri != null) {
+                    Uri imageUri = Uri.parse(stPhotoUri);
+                    Glide.with(context).load(imageUri).into(stHolder.getSenderProfilePictureImageView());
+                }
+
+                stHolder.getSenderNameTextView().setText(stName);
+                stHolder.getMessageContentTextView().setText(messageContent);
+                stHolder.getTimestampTextView().setText(DateManager.getLastActiveText(ft.format(currentDate), ft.format(date)));
+
+                if (currentMessage.getStatus() == Constants.MESSAGE_STATUS_SENT) {
+                    stHolder.getMessageStatusImageView().setImageResource(R.drawable.ic_baseline_done_24);
+                } else {
+                    stHolder.getMessageStatusImageView().setImageResource(R.drawable.ic_baseline_done_all_24);
+                }
+
+                break;
+            case Constants.SENT_IMAGE_MESSAGE:
+                CurrentUserImageMessageViewHolder siHolder = (CurrentUserImageMessageViewHolder) holder;
+
+                SharedPreferences siSharedPreferences = context.getSharedPreferences(Constants.SHARED_PREFERENCES, MODE_PRIVATE);
+
+                String siName = siSharedPreferences.getString(Constants.SHARED_PREFERENCES_NAME, "");
+                String siPhotoUri = siSharedPreferences.getString(Constants.SHARED_PREFERENCES_PHOTO_URI, null);
+
+                if (siPhotoUri != null) {
+                    Uri imageUri = Uri.parse(siPhotoUri);
+                    Glide.with(context).load(imageUri).into(siHolder.getSenderProfilePictureImageView());
+                }
+
+                siHolder.getSenderNameTextView().setText(siName);
+                siHolder.getTimestampTextView().setText(DateManager.getLastActiveText(ft.format(currentDate), ft.format(date)));
+
+                Uri siImageUri = Uri.parse(messageContent);
+                Log.d(TAG, "onBindViewHolder: loading uri " + siImageUri + " in ImageView");
+
+                Bitmap siImageBitmap = null;
+
+                try {
+                    siImageBitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(siImageUri));
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+                if (siImageBitmap != null) {
+                    Glide.with(context).load(siImageBitmap).into(siHolder.getMessageContentImageView());
+                } else {
+                    Log.d(TAG, "onBindViewHolder: image bitmap is null!");
+                }
+
+                if (currentMessage.getStatus() == Constants.MESSAGE_STATUS_SENT) {
+                    siHolder.getMessageStatusImageView().setImageResource(R.drawable.ic_baseline_done_24);
+                } else {
+                    siHolder.getMessageStatusImageView().setImageResource(R.drawable.ic_baseline_done_all_24);
+                }
+                break;
+            case Constants.RECEIVED_TEXT_MESSAGE:
+                OtherUserTextMessageViewHolder rtHolder = (OtherUserTextMessageViewHolder) holder;
 
                 if (contact.getPhotoUri() != null) {
                     Uri imageUri = Uri.parse(contact.getPhotoUri());
-                    Glide.with(context).load(imageUri).into(mHolder.getSenderProfilePictureImageView());
+                    Glide.with(context).load(imageUri).into(rtHolder.getSenderProfilePictureImageView());
                 }
 
-                mHolder.getSenderNameTextView().setText(contact.getName());
-                mHolder.getMessageContentTextView().setText(messageContent);
-                mHolder.getTimestampTextView().setText(DateManager.getLastActiveText(ft.format(currentDate), ft.format(date)));
-                break;
-
-            case 1:
-                ChatOtherViewHolder nHolder = (ChatOtherViewHolder) holder;
-
-                SharedPreferences sharedPreferences = context.getSharedPreferences(Constants.SHARED_PREFERENCES, MODE_PRIVATE);
-
-                String name = sharedPreferences.getString(Constants.SHARED_PREFERENCES_NAME, "");
-                String photoUri = sharedPreferences.getString(Constants.SHARED_PREFERENCES_PHOTO_URI, null);
-
-                if (photoUri != null) {
-                    Uri imageUri = Uri.parse(photoUri);
-                    Glide.with(context).load(imageUri).into(nHolder.getSenderProfilePictureImageView());
-                }
-
-                nHolder.getSenderNameTextView().setText(name);
-                nHolder.getMessageContentTextView().setText(messageContent);
-                nHolder.getTimestampTextView().setText(DateManager.getLastActiveText(ft.format(currentDate), ft.format(date)));
-
-                if (currentMessage.getStatus() == Constants.MESSAGE_STATUS_SENT) {
-                    nHolder.getMessageStatusImageView().setImageResource(R.drawable.ic_baseline_done_24);
-                } else {
-                    nHolder.getMessageStatusImageView().setImageResource(R.drawable.ic_baseline_done_all_24);
-                }
-
+                rtHolder.getSenderNameTextView().setText(contact.getName());
+                rtHolder.getMessageContentTextView().setText(messageContent);
+                rtHolder.getTimestampTextView().setText(DateManager.getLastActiveText(ft.format(currentDate), ft.format(date)));
                 break;
 
             default:
+                OtherUserImageMessageViewHolder riHolder = (OtherUserImageMessageViewHolder) holder;
+
+                if (contact.getPhotoUri() != null) {
+                    Uri imageUri = Uri.parse(contact.getPhotoUri());
+                    Glide.with(context).load(imageUri).into(riHolder.getSenderProfilePictureImageView());
+                }
+
+                riHolder.getSenderNameTextView().setText(contact.getName());
+                riHolder.getTimestampTextView().setText(DateManager.getLastActiveText(ft.format(currentDate), ft.format(date)));
+
+                Uri riImageUri = Uri.parse(messageContent);
+                Log.d(TAG, "onBindViewHolder: loading uri " + riImageUri + " in ImageView");
+
+                Bitmap riImageBitmap = null;
+
+                try {
+                    riImageBitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(riImageUri));
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+                if (riImageBitmap != null) {
+                    Glide.with(context).load(riImageBitmap).into(riHolder.getMessageContentImageView());
+                } else {
+                    Log.d(TAG, "onBindViewHolder: image bitmap is null!");
+                }
+
                 break;
         }
     }
