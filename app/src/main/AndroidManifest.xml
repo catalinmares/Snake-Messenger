@@ -28,7 +28,7 @@
         android:roundIcon="@mipmap/snake_logo_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".chats.PreviewPictureActivity"></activity>
+        <activity android:name=".chats.PreviewPictureActivity" />
         <activity android:name=".chats.SendMessageActivity" />
         <activity
             android:name=".LauncherActivity"
