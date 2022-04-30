@@ -9,38 +9,41 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.example.snakemessenger.R;
+import com.example.snakemessenger.databinding.ActivityPreviewPictureBinding;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class PreviewPictureActivity extends AppCompatActivity {
     public static Bitmap imageBitmap;
+    private ActivityPreviewPictureBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_preview_picture);
+        binding = ActivityPreviewPictureBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        ImageView pictureImageView = findViewById(R.id.picture_image_view);
-
-        FloatingActionButton sendPictureButton = findViewById(R.id.send_picture_btn);
-        sendPictureButton.setOnClickListener(v -> {
-            setResult(Activity.RESULT_OK);
-            finish();
-        });
-
-        FloatingActionButton cancelButton = findViewById(R.id.cancel_btn);
-        cancelButton.setOnClickListener(v -> {
-            setResult(Activity.RESULT_CANCELED);
-            finish();
-        });
-
-        if (imageBitmap != null) {
-            Glide.with(this).load(imageBitmap).into(pictureImageView);
-        }
+        setUIAction();
     }
 
     @Override
     public void onBackPressed() {
         setResult(Activity.RESULT_CANCELED);
         super.onBackPressed();
+    }
+
+    private void setUIAction() {
+        binding.sendPictureBtn.setOnClickListener(v -> {
+            setResult(Activity.RESULT_OK);
+            finish();
+        });
+
+        binding.cancelBtn.setOnClickListener(v -> {
+            setResult(Activity.RESULT_CANCELED);
+            finish();
+        });
+
+        if (imageBitmap != null) {
+            Glide.with(this).load(imageBitmap).into(binding.pictureImageView);
+        }
     }
 }

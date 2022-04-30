@@ -66,4 +66,5 @@
     <string name="contacts_list_empty">Your contacts list is empty.</string>
     <string name="select_contacts">Select contacts</string>
     <string name="type_a_name">Type a name...</string>
+    <string name="phone_number">Phone number</string>
 </resources>

@@ -62,6 +62,25 @@
             android:layout_marginTop="30dp"/>
 
         <EditText
+            android:id="@+id/phone_number"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginHorizontal="20dp"
+            android:ems="10"
+            android:hint="@string/phone_number"
+            android:enabled="false"
+            android:textColorHint="@color/colorText"
+            android:textColor="@color/colorPrimaryDark"
+            android:drawableStart="@drawable/ic_baseline_account_circle"
+            android:drawablePadding="12dp"
+            android:background="@drawable/custom_input"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_below="@id/set_device_id"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"/>
+
+        <EditText
             android:id="@+id/set_profile_status"
             android:layout_width="match_parent"
             android:layout_height="50dp"
@@ -77,7 +96,7 @@
             android:background="@drawable/custom_input"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            android:layout_below="@id/set_device_id"
+            android:layout_below="@id/phone_number"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="30dp"/>
 
@@ -86,7 +105,7 @@
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="75dp"
+            android:layout_marginTop="15dp"
             app:backgroundTint="@color/colorAccent"
             android:background="@drawable/custom_button"
             android:text="@string/update_profile"

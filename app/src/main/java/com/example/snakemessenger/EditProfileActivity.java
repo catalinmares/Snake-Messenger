@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.snakemessenger.databinding.ActivityEditProfileBinding;
 import com.example.snakemessenger.general.Utilities;
 import com.example.snakemessenger.models.Contact;
 import com.example.snakemessenger.general.Constants;
@@ -28,9 +29,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import static com.example.snakemessenger.MainActivity.db;
 
 public class EditProfileActivity extends AppCompatActivity {
-
-    private CircleImageView profilePictureImageView;
-    private EditText usernameEditText, deviceIdEditText, descriptionEditText;
+    private ActivityEditProfileBinding binding;
 
     private SharedPreferences loginPreferences;
     private Uri imageUri = null;
@@ -41,27 +40,22 @@ public class EditProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_profile);
+        binding = ActivityEditProfileBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         loginPreferences = getApplicationContext().getSharedPreferences(Constants.SHARED_PREFERENCES, MODE_PRIVATE);
 
         String contactDeviceId = Objects.requireNonNull(getIntent().getExtras()).getString(Constants.EXTRA_CONTACT_DEVICE_ID, "");
         contact = db.getContactDao().findByDeviceId(contactDeviceId);
 
-        profilePictureImageView = findViewById(R.id.set_profile_image);
-        usernameEditText = findViewById(R.id.set_user_name);
-        deviceIdEditText = findViewById(R.id.set_device_id);
-        descriptionEditText = findViewById(R.id.set_profile_status);
-        Button updateButton = findViewById(R.id.update_settings_button);
-
         updateUI();
 
-        profilePictureImageView.setOnClickListener(view -> Utilities.showImagePickDialog(EditProfileActivity.this));
+        binding.setProfileImage.setOnClickListener(view -> Utilities.showImagePickDialog(EditProfileActivity.this));
 
-        updateButton.setOnClickListener(view -> {
+        binding.updateSettingsButton.setOnClickListener(view -> {
             boolean ok = true;
-            String userName = usernameEditText.getText().toString();
-            String userDescription = descriptionEditText.getText().toString();
+            String userName = binding.setUserName.getText().toString();
+            String userDescription = binding.setProfileStatus.getText().toString();
 
             if (contact == null) {
                 SharedPreferences.Editor editor = loginPreferences.edit();
@@ -69,7 +63,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 if (!TextUtils.isEmpty(userName)) {
                     editor.putString(Constants.SHARED_PREFERENCES_NAME, userName);
                 } else {
-                    usernameEditText.setError(Constants.ERROR_NAME_REQUIRED_TEXT);
+                    binding.setUserName.setError(Constants.ERROR_NAME_REQUIRED_TEXT);
                     ok = false;
                 }
 
@@ -94,7 +88,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 if (!TextUtils.isEmpty(userName)) {
                     contact.setName(userName);
                 } else {
-                    usernameEditText.setError(Constants.ERROR_NAME_REQUIRED_TEXT);
+                    binding.setUserName.setError(Constants.ERROR_NAME_REQUIRED_TEXT);
                     ok = false;
                 }
 
@@ -139,16 +133,16 @@ public class EditProfileActivity extends AppCompatActivity {
             photoUri = contact.getPhotoUri();
         }
 
-        usernameEditText.setText(name);
-        deviceIdEditText.setText(deviceId);
-        descriptionEditText.setText(description);
+        binding.setUserName.setText(name);
+        binding.setDeviceId.setText(deviceId);
+        binding.setProfileStatus.setText(description);
 
         if (photoUri != null && !photoUri.isEmpty()) {
             imageUri = Uri.parse(photoUri);
 
             try {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
-                profilePictureImageView.setImageBitmap(bitmap);
+                binding.setProfileImage.setImageBitmap(bitmap);
             } catch (IOException e) {
                 Toast.makeText(EditProfileActivity.this, Constants.TOAST_FAILED_TO_LOAD_IMAGE, Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
@@ -167,7 +161,7 @@ public class EditProfileActivity extends AppCompatActivity {
             assert extras != null;
 
             Bitmap imageBitmap = (Bitmap) extras.get(Constants.EXTRA_IMAGE_CAPTURE_DATA);
-            profilePictureImageView.setImageBitmap(imageBitmap);
+            binding.setProfileImage.setImageBitmap(imageBitmap);
 
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             assert imageBitmap != null;
@@ -183,7 +177,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
             try {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
-                profilePictureImageView.setImageBitmap(bitmap);
+                binding.setProfileImage.setImageBitmap(bitmap);
             } catch (IOException e) {
                 Toast.makeText(EditProfileActivity.this, Constants.TOAST_FAILED_TO_LOAD_IMAGE, Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
@@ -193,6 +187,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == Constants.REQUEST_IMAGE_CAPTURE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
