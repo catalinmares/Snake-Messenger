@@ -85,6 +85,7 @@ public interface Constants {
     String JSON_IMAGE_PART_NO_KEY = "partNo";
     String JSON_IMAGE_PART_SIZE_KEY = "partSize";
     String JSON_MESSAGE_TOTAL_SIZE = "totalSize";
+    String JSON_ENCRYPTION_KEY = "encryptionKey";
 
     String[] REQUIRED_PERMISSIONS =
             new String[] {

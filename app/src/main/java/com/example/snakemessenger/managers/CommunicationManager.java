@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import com.example.snakemessenger.crypto.CryptoManager;
 import com.example.snakemessenger.general.Utilities;
 import com.example.snakemessenger.models.Contact;
 import com.example.snakemessenger.models.Message;
@@ -85,13 +86,17 @@ public class CommunicationManager {
                 JSONObject messageJSON = new JSONObject();
 
                 try {
+                    String encryptionKey = CryptoManager.INSTANCE.generateKey();
+                    String encryptedMessage = CryptoManager.INSTANCE.encryptMessage(encryptionKey, chunkContent);
+
                     messageJSON.put(Constants.JSON_MESSAGE_ID_KEY, message.getMessageId());
                     messageJSON.put(Constants.JSON_SOURCE_DEVICE_ID_KEY, message.getSource());
                     messageJSON.put(Constants.JSON_DESTINATION_DEVICE_ID_KEY, message.getDestination());
                     messageJSON.put(Constants.JSON_MESSAGE_TIMESTAMP_KEY, message.getTimestamp());
                     messageJSON.put(Constants.JSON_CONTENT_TYPE_KEY, message.getContentType());
                     messageJSON.put(Constants.JSON_MESSAGE_TYPE_KEY, message.getType());
-                    messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, chunkContent);
+                    messageJSON.put(Constants.JSON_ENCRYPTION_KEY, encryptionKey);
+                    messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, encryptedMessage);
                     messageJSON.put(Constants.JSON_IMAGE_PART_NO_KEY, count);
                     messageJSON.put(Constants.JSON_IMAGE_PART_SIZE_KEY, lastIdx - i);
                     messageJSON.put(Constants.JSON_IMAGE_SIZE_KEY, imageBytes.length);
@@ -118,13 +123,17 @@ public class CommunicationManager {
         JSONObject messageJSON = new JSONObject();
 
         try {
+            String encryptionKey = CryptoManager.INSTANCE.generateKey();
+            String encryptedMessage = CryptoManager.INSTANCE.encryptMessage(encryptionKey, message.getContent());
+
             messageJSON.put(Constants.JSON_MESSAGE_ID_KEY, message.getMessageId());
             messageJSON.put(Constants.JSON_SOURCE_DEVICE_ID_KEY, message.getSource());
             messageJSON.put(Constants.JSON_DESTINATION_DEVICE_ID_KEY, message.getDestination());
             messageJSON.put(Constants.JSON_MESSAGE_TIMESTAMP_KEY, message.getTimestamp());
             messageJSON.put(Constants.JSON_CONTENT_TYPE_KEY, message.getContentType());
             messageJSON.put(Constants.JSON_MESSAGE_TYPE_KEY, message.getType());
-            messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, message.getContent());
+            messageJSON.put(Constants.JSON_ENCRYPTION_KEY, encryptionKey);
+            messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, encryptedMessage);
             messageJSON.put(Constants.JSON_MESSAGE_TOTAL_SIZE, message.getContent().length());
 
             Payload messagePayload = Payload.fromBytes(messageJSON.toString().getBytes());
@@ -142,13 +151,17 @@ public class CommunicationManager {
         JSONObject messageJSON = new JSONObject();
 
         try {
+            String encryptionKey = CryptoManager.INSTANCE.generateKey();
+            String encryptedMessage = CryptoManager.INSTANCE.encryptMessage(encryptionKey, messageContent);
+
             messageJSON.put(Constants.JSON_MESSAGE_ID_KEY, UUID.randomUUID().toString());
             messageJSON.put(Constants.JSON_SOURCE_DEVICE_ID_KEY, myDeviceId);
             messageJSON.put(Constants.JSON_DESTINATION_DEVICE_ID_KEY, contact.getDeviceID());
             messageJSON.put(Constants.JSON_MESSAGE_TIMESTAMP_KEY, System.currentTimeMillis());
             messageJSON.put(Constants.JSON_CONTENT_TYPE_KEY, Constants.CONTENT_TEXT);
             messageJSON.put(Constants.JSON_MESSAGE_TYPE_KEY, Constants.MESSAGE_TYPE_MESSAGE);
-            messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, messageContent);
+            messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, encryptedMessage);
+            messageJSON.put(Constants.JSON_ENCRYPTION_KEY, encryptionKey);
             messageJSON.put(Constants.JSON_MESSAGE_TOTAL_SIZE, messageContent.length());
 
             Payload messagePayload = Payload.fromBytes(messageJSON.toString().getBytes());
@@ -211,13 +224,17 @@ public class CommunicationManager {
             JSONObject messageJSON = new JSONObject();
 
             try {
+                String encryptionKey = CryptoManager.INSTANCE.generateKey();
+                String encryptedMessage = CryptoManager.INSTANCE.encryptMessage(encryptionKey, chunkContent);
+
                 messageJSON.put(Constants.JSON_MESSAGE_ID_KEY, messageId);
                 messageJSON.put(Constants.JSON_SOURCE_DEVICE_ID_KEY, myDeviceId);
                 messageJSON.put(Constants.JSON_DESTINATION_DEVICE_ID_KEY, contact.getDeviceID());
                 messageJSON.put(Constants.JSON_MESSAGE_TIMESTAMP_KEY, timestamp);
                 messageJSON.put(Constants.JSON_CONTENT_TYPE_KEY, Constants.CONTENT_IMAGE);
                 messageJSON.put(Constants.JSON_MESSAGE_TYPE_KEY, Constants.MESSAGE_TYPE_MESSAGE);
-                messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, chunkContent);
+                messageJSON.put(Constants.JSON_ENCRYPTION_KEY, encryptionKey);
+                messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, encryptedMessage);
                 messageJSON.put(Constants.JSON_IMAGE_PART_NO_KEY, count);
                 messageJSON.put(Constants.JSON_IMAGE_PART_SIZE_KEY, lastIdx - i);
                 messageJSON.put(Constants.JSON_IMAGE_SIZE_KEY, imageBytes.length);
@@ -237,13 +254,17 @@ public class CommunicationManager {
         JSONObject messageJSON = new JSONObject();
 
         try {
+            String encryptionKey = CryptoManager.INSTANCE.generateKey();
+            String encryptedMessage = CryptoManager.INSTANCE.encryptMessage(encryptionKey, imagePath);
+
             messageJSON.put(Constants.JSON_MESSAGE_ID_KEY, messageId);
             messageJSON.put(Constants.JSON_SOURCE_DEVICE_ID_KEY, myDeviceId);
             messageJSON.put(Constants.JSON_DESTINATION_DEVICE_ID_KEY, contact.getDeviceID());
             messageJSON.put(Constants.JSON_MESSAGE_TIMESTAMP_KEY, timestamp);
             messageJSON.put(Constants.JSON_CONTENT_TYPE_KEY, Constants.CONTENT_IMAGE);
             messageJSON.put(Constants.JSON_MESSAGE_TYPE_KEY, Constants.MESSAGE_TYPE_MESSAGE);
-            messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, imagePath);
+            messageJSON.put(Constants.JSON_ENCRYPTION_KEY, encryptionKey);
+            messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, encryptedMessage);
             messageJSON.put(Constants.JSON_MESSAGE_TOTAL_SIZE, imageBytes.length);
 
             Utilities.saveOwnMessageToDatabase(messageJSON, payloadId, Constants.MESSAGE_STATUS_SENT);

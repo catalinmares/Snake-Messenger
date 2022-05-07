@@ -12,6 +12,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 
 import com.example.snakemessenger.MainActivity;
+import com.example.snakemessenger.crypto.CryptoManager;
 import com.example.snakemessenger.models.Contact;
 import com.example.snakemessenger.models.ImageMessage;
 import com.example.snakemessenger.models.ImagePart;
@@ -33,6 +34,10 @@ import static com.example.snakemessenger.services.BackgroundCommunicationService
 public class Utilities {
     public static Message saveOwnMessageToDatabase(JSONObject messageJSON, long payloadId, int messageStatus) {
         try {
+            String encryptionKey = messageJSON.getString(Constants.JSON_ENCRYPTION_KEY);
+            String encryptedMessage = messageJSON.getString(Constants.JSON_MESSAGE_CONTENT_KEY);
+            String decryptedMessage = CryptoManager.INSTANCE.decryptMessage(encryptionKey, encryptedMessage);
+
             Message message = new Message(
                     0,
                     messageJSON.getString(Constants.JSON_MESSAGE_ID_KEY),
@@ -41,7 +46,7 @@ public class Utilities {
                     messageJSON.getString(Constants.JSON_SOURCE_DEVICE_ID_KEY),
                     messageJSON.getString(Constants.JSON_DESTINATION_DEVICE_ID_KEY),
                     messageJSON.getInt(Constants.JSON_CONTENT_TYPE_KEY),
-                    messageJSON.getString(Constants.JSON_MESSAGE_CONTENT_KEY),
+                    decryptedMessage,
                     messageJSON.getLong(Constants.JSON_MESSAGE_TOTAL_SIZE),
                     messageJSON.getLong(Constants.JSON_MESSAGE_TIMESTAMP_KEY),
                     0,
@@ -81,6 +86,10 @@ public class Utilities {
 
     public static void saveDataMemoryMessageToDatabase(JSONObject messageJSON, long payloadId, int messageStatus) {
         try {
+            String encryptionKey = messageJSON.getString(Constants.JSON_ENCRYPTION_KEY);
+            String encryptedMessage = messageJSON.getString(Constants.JSON_MESSAGE_CONTENT_KEY);
+            String decryptedMessage = CryptoManager.INSTANCE.decryptMessage(encryptionKey, encryptedMessage);
+
             Message message = new Message(
                     0,
                     messageJSON.getString(Constants.JSON_MESSAGE_ID_KEY),
@@ -89,7 +98,7 @@ public class Utilities {
                     messageJSON.getString(Constants.JSON_SOURCE_DEVICE_ID_KEY),
                     messageJSON.getString(Constants.JSON_DESTINATION_DEVICE_ID_KEY),
                     messageJSON.getInt(Constants.JSON_CONTENT_TYPE_KEY),
-                    messageJSON.getString(Constants.JSON_MESSAGE_CONTENT_KEY),
+                    decryptedMessage,
                     messageJSON.getLong(Constants.JSON_MESSAGE_TOTAL_SIZE),
                     messageJSON.getLong(Constants.JSON_MESSAGE_TIMESTAMP_KEY),
                     0,
@@ -182,13 +191,16 @@ public class Utilities {
         JSONObject messageJSON = new JSONObject();
 
         try {
+            String encryptionKey = CryptoManager.INSTANCE.generateKey();
+            String encryptedMessage = CryptoManager.INSTANCE.encryptMessage(encryptionKey, imagePath);
             messageJSON.put(Constants.JSON_MESSAGE_ID_KEY, imageMessage.getMessageId());
             messageJSON.put(Constants.JSON_SOURCE_DEVICE_ID_KEY, imageMessage.getSourceId());
             messageJSON.put(Constants.JSON_DESTINATION_DEVICE_ID_KEY, imageMessage.getDestinationId());
             messageJSON.put(Constants.JSON_MESSAGE_TIMESTAMP_KEY, imageMessage.getTimestamp());
             messageJSON.put(Constants.JSON_CONTENT_TYPE_KEY, Constants.CONTENT_IMAGE);
             messageJSON.put(Constants.JSON_MESSAGE_TYPE_KEY, Constants.MESSAGE_TYPE_MESSAGE);
-            messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, imagePath);
+            messageJSON.put(Constants.JSON_ENCRYPTION_KEY, encryptionKey);
+            messageJSON.put(Constants.JSON_MESSAGE_CONTENT_KEY, encryptedMessage);
             messageJSON.put(Constants.JSON_MESSAGE_TOTAL_SIZE, imageMessage.getTotalSize());
         } catch (JSONException e) {
             Log.d(TAG, "saveImageToDatabase: could not save image. Error: " + e.getMessage());

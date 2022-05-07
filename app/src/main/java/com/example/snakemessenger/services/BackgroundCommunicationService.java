@@ -20,6 +20,7 @@ import androidx.collection.SimpleArrayMap;
 import androidx.core.app.NotificationCompat;
 import com.example.snakemessenger.MainActivity;
 import com.example.snakemessenger.R;
+import com.example.snakemessenger.crypto.CryptoManager;
 import com.example.snakemessenger.general.Constants;
 import com.example.snakemessenger.general.Utilities;
 import com.example.snakemessenger.managers.CommunicationManager;
@@ -342,7 +343,9 @@ public class BackgroundCommunicationService extends Service {
 
                                         int partNo = messageJSON.getInt(Constants.JSON_IMAGE_PART_NO_KEY);
                                         int partSize = messageJSON.getInt(Constants.JSON_IMAGE_PART_SIZE_KEY);
-                                        String content = messageJSON.getString(Constants.JSON_MESSAGE_CONTENT_KEY);
+                                        String encryptedContent = messageJSON.getString(Constants.JSON_MESSAGE_CONTENT_KEY);
+                                        String encryptKey = messageJSON.getString(Constants.JSON_ENCRYPTION_KEY);
+                                        String content = CryptoManager.INSTANCE.decryptMessage(encryptKey, encryptedContent);
                                         byte[] contentBytes = Base64.decode(content, Base64.DEFAULT);
 
                                         Log.d(TAG, "onPayloadTransferUpdate: received chunk with number " + partNo + " of size " + partSize);
